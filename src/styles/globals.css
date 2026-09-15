@@ -1,0 +1,368 @@
+@import './tokens.css';
+
+/* Evita conflito entre o scroll suave nativo do browser e o Lenis
+   (ex.: leve travada perto do topo ao rolar para cima). Precisa vir depois do
+   @import (regra obrigatória de CSS: @import só pode ser precedido por
+   @charset), mas antes de qualquer outra regra de estilo. */
+html {
+  scroll-behavior: auto !important;
+  overflow-x: hidden;
+  scroll-snap-type: y proximity;
+}
+
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+  }
+}
+
+/* Hero (LandingPage) — barra de logos em carrossel infinito, CSS puro.
+   marquee-track tem 2 marquee-sets idênticos lado a lado; ao animar até
+   -50%, o segundo set fica exatamente onde o primeiro começou — loop sem
+   salto visual. */
+.marquee-wrapper {
+  overflow: hidden;
+  width: 100%;
+  background: transparent;
+  padding: 14px 0 18px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  mask-image: linear-gradient(to right, transparent 0%, black 18%, black 82%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 18%, black 82%, transparent 100%);
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll 100s linear infinite;
+  will-change: transform;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  perspective: 1000px;
+  -webkit-perspective: 1000px;
+}
+
+.marquee-set {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.marquee-item {
+  height: 15px;
+  width: auto;
+  object-fit: contain;
+  margin: 0 36px;
+  filter: grayscale(100%);
+  opacity: 0.45;
+  transition: opacity 0.25s ease, filter 0.25s ease;
+}
+
+.marquee-item:hover {
+  filter: grayscale(0%);
+  opacity: 1;
+}
+
+@keyframes marquee-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    ellipse 80% 60% at -10% 30%,
+    rgba(180, 200, 255, 0.045) 0%,
+    transparent 70%
+  );
+}
+
+/* Hero — cursor piscante ao lado do rótulo com efeito de digitação. */
+.hero-label-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 0.85em;
+  margin-left: 3px;
+  background: currentColor;
+  vertical-align: -1px;
+  animation: hero-label-blink 0.85s step-end infinite;
+}
+
+@keyframes hero-label-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes arrow-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateY(8px);
+    opacity: 0.9;
+  }
+}
+
+/* GreenSection e FinalCtaSection — bola de fundo com forma orgânica tipo
+   "lava lamp", morfando continuamente entre estados bem irregulares (nunca
+   um círculo perfeito). */
+@keyframes blob-morph {
+  0% {
+    border-radius: 68% 32% 58% 42% / 38% 68% 32% 62%;
+  }
+  25% {
+    border-radius: 40% 60% 68% 32% / 62% 38% 65% 35%;
+  }
+  50% {
+    border-radius: 32% 68% 38% 62% / 68% 30% 70% 32%;
+  }
+  75% {
+    border-radius: 62% 38% 30% 70% / 45% 58% 40% 60%;
+  }
+  100% {
+    border-radius: 68% 32% 58% 42% / 38% 68% 32% 62%;
+  }
+}
+
+/* LoginPage — cartão neumórfico (from Uiverse.io by Codewithvinay). */
+.glass-card {
+  border-radius: 50px;
+  background: #e0e0e0;
+  box-shadow:
+    20px 20px 60px #bebebe,
+    -20px -20px 60px #ffffff;
+}
+
+/* LoginPage/RegisterPage — input com ícone à esquerda (from Uiverse.io by
+   ozgeozkaraa01), cor de marca (#1e2a0e) no lugar do roxo original. */
+.icon-input {
+  padding-left: 3rem !important;
+  border: 2px solid transparent !important;
+  border-radius: 10px !important;
+  background-color: #e0e0e0 !important;
+  color: #0d0c22 !important;
+  transition: 0.5s ease;
+}
+
+.icon-input:hover,
+.icon-input:focus-visible {
+  outline: none !important;
+  border-color: #1e2a0e !important;
+  background-color: #e0e0e0 !important;
+}
+
+.icon-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.icon-input-wrapper svg {
+  position: absolute;
+  left: 1rem;
+  width: 1rem;
+  height: 1rem;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+/* LoginPage — botão "Entrar com Google" (from Uiverse.io by Yaya12085). */
+.google-btn {
+  max-width: 320px;
+  display: flex;
+  padding: 0.5rem 1.4rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+  vertical-align: middle;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  gap: 0.75rem;
+  color: rgb(65, 63, 63);
+  background-color: #fff;
+  cursor: pointer;
+  transition: all 0.6s ease;
+}
+
+.google-btn svg {
+  height: 24px;
+  width: 24px;
+  flex-shrink: 0;
+}
+
+.google-btn:hover {
+  transform: scale(1.02);
+}
+
+/* PricingSection — toggle Mensal/Anual (from Uiverse.io), cor "ligado" trocada
+   para o verde-neon de marca (--color-accent) no lugar do rgb(0,221,80) original. */
+.switch {
+  font-size: 17px;
+  position: relative;
+  display: inline-block;
+  width: 3.5em;
+  height: 2em;
+  flex-shrink: 0;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switch .slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 30px;
+}
+
+.switch .slider:before {
+  position: absolute;
+  content: '';
+  height: 1.4em;
+  width: 1.4em;
+  border-radius: 20px;
+  left: 0.3em;
+  bottom: 0.3em;
+  background-color: white;
+  transition: 0.4s;
+}
+
+.switch input:checked + .slider {
+  background-color: var(--color-accent);
+}
+
+.switch input:focus + .slider {
+  box-shadow: 0 0 1px var(--color-accent);
+}
+
+.switch input:checked + .slider:before {
+  transform: translateX(1.5em);
+}
+
+/* PricingSection — cards de planos "glass" empilhados (from Uiverse.io),
+   adaptado para caber o conteúdo completo do plano (título, preço, lista,
+   CTA) em vez do card compacto de ícone original. Em telas md+, os 3 cards
+   começam sobrepostos e inclinados (--r); ao passar o mouse sobre o grupo
+   (.plan-stack), a classe .is-open (estado React que não reverte sozinho)
+   os abre e mantém abertos até a página ser recarregada. */
+.plan-glass {
+  position: relative;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.18));
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 25px 25px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  transition: transform 0.5s ease, box-shadow 0.4s ease;
+}
+
+.plan-glass--highlighted {
+  border-color: var(--color-accent);
+  border-width: 2px;
+}
+
+/* FeaturesSection — cards "glass" estáticos (sem o empilhamento do
+   .plan-stack), com um hover leve igual ao dos cards de planos. */
+.plan-glass--static:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 30px 30px rgba(0, 0, 0, 0.18);
+}
+
+/* FeaturesSection — painel de descrição detalhada que cobre o card no hover.
+   Não pode usar a classe .plan-glass aqui: ela define `position: relative`,
+   que ganharia do utilitário `absolute` do Tailwind (mesma especificidade,
+   .plan-glass vem depois no CSS) e o painel passaria a ocupar espaço real no
+   fluxo em vez de flutuar por cima — foi exatamente o bug corrigido aqui. */
+.plan-glass-overlay {
+  position: absolute;
+  inset: 0 0 auto 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.94));
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.14);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+}
+
+/* GreenSection — bloco de texto institucional com scroll interno próprio.
+   `data-lenis-prevent` (no JSX) faz o Lenis ignorar o wheel enquanto o mouse
+   está sobre este elemento, deixando o scroll nativo do navegador cuidar
+   dele — inclusive o "scroll chaining" padrão: ao chegar no fim do texto,
+   o scroll continua naturalmente para a página. Fora do texto, o Lenis volta
+   a controlar o scroll da página normalmente. */
+.green-text-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(30, 42, 14, 0.35) transparent;
+  mask-image: linear-gradient(to bottom, black 88%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 88%, transparent 100%);
+}
+
+.green-text-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.green-text-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(30, 42, 14, 0.35);
+  border-radius: 999px;
+}
+
+.green-text-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Importante: o deslocamento usa apenas `transform` (translateX/Y + rotate),
+   nunca `margin` — margin numa largura auto teria encolhido/esticado a
+   caixa real do card junto com o deslocamento. Com `width` fixo (340px,
+   ver className) + transform, o card sempre mantém o mesmo tamanho, só a
+   posição muda. */
+@media (min-width: 768px) {
+  .plan-stack .plan-glass {
+    transform: rotate(calc(var(--r) * 1deg)) translateX(var(--closeX));
+  }
+
+  /* Aberto: empurra os cards para os lados (translateX positivo/negativo),
+     mas mantém uma inclinação e um deslocamento vertical residuais e
+     diferentes por card — leque espalhado "à mão", nunca uma grade
+     perfeitamente simétrica. O card central (--openX: 0) permanece no meio. */
+  .plan-stack.is-open .plan-glass {
+    transform: rotate(calc(var(--r) * 0.7deg)) translateY(calc(var(--r) * 3px)) translateX(var(--openX));
+  }
+
+  .plan-stack.is-open .plan-glass:hover {
+    transform: rotate(calc(var(--r) * 0.7deg)) translateY(calc(var(--r) * 3px - 8px)) translateX(var(--openX));
+    box-shadow: 0 30px 35px rgba(0, 0, 0, 0.2);
+  }
+}
