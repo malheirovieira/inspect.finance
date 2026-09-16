@@ -82,10 +82,9 @@ export function RegisterPage() {
         <div className="glass-card w-full max-w-md p-10 text-center">
           <h1 className="text-lg font-semibold">Confirme seu e-mail</h1>
           <p className="mt-3 text-sm text-muted-foreground">
-            Enviamos um link de confirmação para <strong>{email}</strong>.{' '}
-            {plan === 'basic'
-              ? 'Confirme para ativar seu trial de 7 dias.'
-              : 'Confirme para ativar sua assinatura.'}
+            Enviamos um link de confirmação para <strong>{email}</strong>. Depois de confirmar, é só entrar e completar o pagamento do
+            plano {plan === 'basic' ? 'Basic (com o trial de 7 dias)' : PLANS.find((p) => p.id === plan)?.name} — cartão ou PIX,
+            você escolhe na hora.
           </p>
           <Link to="/login" className="mt-6 inline-block text-sm font-medium text-[#1e2a0e] hover:underline">
             Voltar para o login

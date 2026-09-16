@@ -13,15 +13,17 @@
 Desconto anual: ~20% (equivale a pagar ~10 meses)
 
 ### Trial
-- 14 dias grátis em todos os planos
-- Acesso completo ao plano escolhido durante o trial
-- **Sem dados de pagamento para iniciar** — usuário cadastra, escolhe o plano e já tem acesso
-- Sequência de e-mails via Resend:
-  - D+3 (dia 3 do trial): boas-vindas + dica de uso
-  - D+11 (3 dias antes do fim): lembrete informativo
-  - D+13 (1 dia antes): urgência — "amanhã seu trial acaba"
-  - D+14 / expiração: CTA direto para upgrade + link de pagamento PIX
-- Após trial: `plan_status = 'cancelled'`, acesso bloqueado até pagamento
+- 7 dias grátis, exclusivo do plano Basic
+- Requer cartão cadastrado no ato do cadastro para liberar o teste (não é cobrado se cancelar antes do fim)
+- Planos Pro e Duo não têm trial — cobrança (mensal ou 12x no anual) é feita imediatamente na assinatura
+- No plano mensal (Basic), cancelamento livre a qualquer momento, antes ou depois do trial
+- Sequência de e-mails via Resend (trial Basic):
+  - D+1 (dia 1 do trial): boas-vindas + dica de uso
+  - D+4 (3 dias antes do fim): lembrete informativo
+  - D+6 (1 dia antes): urgência — "amanhã seu trial acaba"
+  - D+7 / expiração: cobrança automática (mensal) ou CTA de confirmação (anual)
+- Se cancelado antes do fim do trial: `plan_status = 'cancelled'`, acesso bloqueado sem cobrança
+- Se não cancelado: cobrança processada normalmente ao fim do trial
 
 ---
 
@@ -149,6 +151,6 @@ Fonte: PostHog + consultas no banco de dados via painel admin (V2).
 ## TODO — Refinamento Pendente
 
 - [ ] Confirmar suporte a recorrência nativa no AbacatePay
-- [ ] Definir se trial requer cartão/PIX cadastrado ou é totalmente sem dados de pagamento
+- [x] Definir se trial requer cartão/PIX cadastrado — decidido: sim, cartão obrigatório, trial exclusivo do Basic
 - [ ] Definir política de reembolso
 - [ ] Definir política de pausa de assinatura

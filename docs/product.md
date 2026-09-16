@@ -53,14 +53,14 @@ O usuário típico:
 - Metas de poupança com progresso visual
 - Gamificação completa (títulos e conquistas)
 - Contas e despesas recorrentes
-- Trial de 14 dias
+- Trial de 7 dias grátis (requer cartão cadastrado para liberar)
 
 ### Pro — R$29,90/mês
 - Tudo do Basic
 - Integração bancária automática via Pluggy (Open Finance)
 - IA financeira: análise de saúde + conselhos (15 consultas/dia)
 - Relatórios avançados com gráficos e histórico
-- Trial de 14 dias
+- Sem trial — cobrança imediata na assinatura (mensal ou 12x no anual)
 
 ### Duo — R$39,90/mês
 - Tudo do Pro
@@ -68,9 +68,9 @@ O usuário típico:
 - Visão consolidada do casal
 - Metas compartilhadas com progresso conjunto
 - Cada pessoa mantém privacidade dos próprios dados
-- Trial de 14 dias
+- Sem trial — cobrança imediata na assinatura (mensal ou 12x no anual)
 
-**Desconto anual:** 20% (equivale a pagar ~10 meses em vez de 12)
+**Desconto anual:** 20% (equivale a pagar ~10 meses em vez de 12). No plano mensal, cancelamento livre a qualquer momento; no anual, a cobrança das 12 parcelas é feita no ato da assinatura (ou ao final do teste, no caso do Basic).
 
 ---
 
@@ -92,7 +92,7 @@ O usuário típico:
 | 10 | Metas de poupança com barra de progresso |
 | 11 | Gamificação: conquistas e títulos por comportamento |
 | 12 | IA financeira — análise de saúde (Pro) |
-| 13 | Assinatura via AbacatePay + trial 14 dias |
+| 13 | Assinatura via AbacatePay + trial de 7 dias (plano Basic) |
 | 14 | E-mail transacional (Resend): boas-vindas, confirmação, fatura |
 
 ### V1 — Após primeiros pagantes
@@ -126,7 +126,7 @@ O usuário típico:
 
 1. Usuário se cadastra (email + senha)
 2. Confirma e-mail
-3. Escolhe plano + inicia trial de 14 dias
+3. Escolhe plano — trial de 7 dias grátis se escolher o Basic (requer cartão); Pro e Duo cobram imediatamente
 4. Aceita termos (LGPD + Termos de Uso)
 5. Parametriza conta: nome, moeda base, foto de perfil
 6. Cadastra primeira conta bancária

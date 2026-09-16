@@ -59,15 +59,22 @@ Arquitetura **Supabase-first** para o MVP e V1. Sem servidor dedicado (Spring Bo
 /cadastro            → Cadastro
 /app                 → Layout autenticado
 /app/dashboard       → Dashboard principal
-/app/transactions    → Transações
-/app/accounts        → Contas
-/app/goals           → Metas
-/app/achievements    → Conquistas
-/app/ai              → Chat IA (apenas Pro)
-/app/reports         → Relatórios (apenas Pro)
-/app/settings        → Configurações
-/app/settings/plan   → Plano e assinatura
+/app/receitas        → Receitas
+/app/despesas        → Despesas (contas fixas/recorrentes)
+/app/conta-corrente  → Contas bancárias + transações
+/app/metas           → Metas
+/app/relatorios      → Relatórios
+/app/finance-ia      → Chat IA (apenas Pro)
+/app/colaboradores   → Plano Casal (convite de parceiro/parceira)
+/app/parametrizacoes → Configurações (placeholder)
+/app/assinatura      → Plano e assinatura (placeholder)
+/app/ajuda           → Ajuda (placeholder)
 ```
+
+> Nota: rotas com sufixo "(placeholder)" ainda não têm conteúdo implementado —
+> exibem uma mensagem "Esta área estará disponível em breve." Achievements/
+> gamificação (ver product.md) ainda não tem rota própria nesta versão do
+> app shell.
 
 ### Design System
 - CSS Custom Properties para todos os tokens de cor (facilita dark mode futuro)

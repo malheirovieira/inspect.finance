@@ -3,40 +3,44 @@
  * CSS Custom Properties centralizadas (ADR-005: base para dark mode no V2 —
  * hoje só o tema claro é definido, mas toda a UI consome variáveis, nunca cores fixas).
  * Valores em HSL "H S% L%" (sem hsl()) para uso com hsl(var(--x) / <alpha-value>) no Tailwind.
+ *
+ * PALETA UNIFICADA — mesmas cores da landing page usadas em toda a aplicação.
  */
 
 :root {
-  /* ---- Paleta bruta (referência de marca) ---- */
-  --cream: 45 67% 95%; /* #FBF7EB — fundo da landing/login */
-  --charcoal: 45 5% 17%; /* #2D2C29 — texto/contraste da landing */
-  --neon: 66 100% 48%; /* #DBF400 — acento da landing (NUNCA usar dentro do app) */
-  --emerald: 163 100% 33%; /* #00A878 — acento do interior do app */
+  /* ---- Paleta bruta (referência de marca — usada em TODA a aplicação) ---- */
+  --neon: 72 100% 50%;       /* #ccff00 — verde neon, cor primária de marca */
+  --moss: 90 48% 11%;        /* #1e2a0e — verde musgo, superfícies escuras */
+  --black: 0 0% 4%;          /* #0a0a0a — preto, texto principal */
+  --gray: 0 0% 88%;          /* #e0e0e0 — cinza, cards e superfícies neutras */
+  --white: 0 0% 100%;        /* #ffffff — branco, fundo principal */
+  --moss-label: 90 35% 35%;  /* #5a7a3a — verde label, textos secundários verdes */
 
-  /* ---- Tokens semânticos (interior do app — estética XP/Itaú: clean, profissional) ---- */
-  --background: 0 0% 100%;
-  --foreground: var(--charcoal);
+  /* ---- Tokens semânticos (consumidos por shadcn/ui e Tailwind) ---- */
+  --background: var(--white);
+  --foreground: var(--black);
 
-  --card: 0 0% 100%;
-  --card-foreground: var(--charcoal);
+  --card: 0 0% 96%;           /* cinza levemente mais claro que --gray para cards */
+  --card-foreground: var(--black);
 
-  --primary: var(--emerald);
-  --primary-foreground: 0 0% 100%;
+  --primary: var(--neon);
+  --primary-foreground: var(--black);   /* texto escuro sobre neon (neon é claro) */
 
-  --secondary: 210 20% 96%;
-  --secondary-foreground: var(--charcoal);
+  --secondary: var(--gray);
+  --secondary-foreground: var(--black);
 
-  --muted: 210 16% 93%;
-  --muted-foreground: 215 10% 45%;
+  --muted: 0 0% 93%;
+  --muted-foreground: 0 0% 42%;        /* #6b6b6b — texto secundário */
 
-  --accent: 163 55% 94%;
-  --accent-foreground: 163 100% 22%;
+  --accent: var(--moss);
+  --accent-foreground: 0 0% 100%;      /* texto claro sobre verde musgo */
 
   --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 100%;
 
-  --border: 214 15% 89%;
-  --input: 214 15% 89%;
-  --ring: var(--emerald);
+  --border: 0 0% 90%;                  /* #e5e5e5 */
+  --input: 0 0% 90%;
+  --ring: var(--neon);
 
   --radius: 0.75rem;
 
@@ -52,9 +56,8 @@
   --spacing-xl: 4rem;
   --spacing-2xl: 6rem;
 
-  /* ---- Landing page (identidade visual Solidroad) — ver src/pages/LandingPage.tsx.
-     Paleta dedicada à landing, independente dos tokens acima (que seguem
-     alimentando login/cadastro e o interior do app). ---- */
+  /* ---- Variáveis legadas da landing page (mantidas para não quebrar
+     LandingPage.tsx — os valores são os mesmos da paleta bruta acima). ---- */
   --color-bg-dark: #0a0a0a;
   --color-bg-white: #e0e0e0;
   --color-bg-light: #faf0e8;

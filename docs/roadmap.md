@@ -54,7 +54,7 @@
 - [ ] Integração AbacatePay (geração de cobrança + link PIX)
 - [ ] Edge Function `process-webhook-abacatepay`
 - [ ] Página de planos e upgrade
-- [ ] Trial de 14 dias com contador regressivo
+- [ ] Trial de 7 dias (plano Basic) com contador regressivo
 - [ ] E-mails transacionais via Resend (boas-vindas, trial, pagamento)
 - [ ] PostHog instalado com eventos principais
 - [ ] Testes manuais end-to-end

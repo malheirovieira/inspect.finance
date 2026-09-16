@@ -102,14 +102,74 @@ export interface Goal {
   updated_at: string;
 }
 
-export interface Database {
+export interface GoalContribution {
+  id: string;
+  goal_id: string;
+  user_id: string;
+  transaction_id: string | null;
+  amount: number;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface RecurringTransaction {
+  id: string;
+  user_id: string;
+  account_id: string;
+  category_id: string | null;
+  type: 'income' | 'expense';
+  description: string;
+  amount: number;
+  currency: string;
+  frequency: RecurringFrequency;
+  day_of_month: number | null;
+  start_date: string;
+  end_date: string | null;
+  last_generated_date: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export type DuoLinkStatus = 'pending' | 'active' | 'rejected' | 'cancelled';
+
+export interface DuoLink {
+  id: string;
+  primary_user_id: string;
+  partner_user_id: string | null;
+  invite_email: string | null;
+  status: DuoLinkStatus;
+  invited_at: string;
+  accepted_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+type Table<Row> = {
+  Row: Row & Record<string, unknown>;
+  Insert: Partial<Row> & Record<string, unknown>;
+  Update: Partial<Row> & Record<string, unknown>;
+  Relationships: [];
+};
+
+export type Database = {
+  __InternalSupabase: {
+    PostgrestVersion: '12';
+  };
   public: {
     Tables: {
-      profiles: { Row: Profile; Insert: Partial<Profile>; Update: Partial<Profile> };
-      accounts: { Row: Account; Insert: Partial<Account>; Update: Partial<Account> };
-      categories: { Row: Category; Insert: Partial<Category>; Update: Partial<Category> };
-      transactions: { Row: Transaction; Insert: Partial<Transaction>; Update: Partial<Transaction> };
-      goals: { Row: Goal; Insert: Partial<Goal>; Update: Partial<Goal> };
+      profiles: Table<Profile>;
+      accounts: Table<Account>;
+      categories: Table<Category>;
+      transactions: Table<Transaction>;
+      recurring_transactions: Table<RecurringTransaction>;
+      goals: Table<Goal>;
+      goal_contributions: Table<GoalContribution>;
+      duo_links: Table<DuoLink>;
     };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
+    Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
   };
 }

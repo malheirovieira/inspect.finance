@@ -163,7 +163,7 @@ PLUGGY_CLIENT_SECRET=      # apenas quando integração bancária ativa (V1)
 | Visão consolidada casal | ❌ | ❌ | ✅ |
 | Limite IA queries/dia | — | 15 | 15 |
 
-Trial: 14 dias em todos os planos — **sem exigir dados de pagamento**. Usuário escolhe o plano no cadastro e tem acesso imediato. E-mails de lembrete: D-11 (informativo), D-13 (urgência), D-14/expiração (CTA de upgrade).
+Trial: 7 dias grátis, exclusivo do plano Basic — requer cartão cadastrado no ato do cadastro para liberar o teste. Nos planos Pro e Duo não há trial: a cobrança (mensal ou 12x no anual) começa direto na assinatura. No plano mensal, cancelamento livre a qualquer momento. E-mails de lembrete (trial Basic): D+1 (boas-vindas), D+4 (lembrete, 3 dias antes do fim), D+6 (urgência, 1 dia antes), D+7/expiração (cobrança ou confirmação).
 
 ---
 
@@ -226,10 +226,20 @@ Todo domingo, Edge Function cron gera um resumo financeiro para usuários Pro at
 
 ## Design System — Referências
 
-Landing page / Login: estética Solidroad.com (cream #FBF7EB, charcoal #2D2C29, neon #DBF400)  
-Interior do app: XP Investimentos + Itaú (clean, profissional, foco em dados)  
-Acento interno: verde-esmeralda `#00A878` (não usar neon #DBF400 dentro do app)  
-Tipografia: Playfair Display (headings, landing) + Inter (body, app)  
+**Paleta unificada** (mesmas cores em landing page, login E interior do app):
+- Verde neon `#ccff00` — cor primária (CTAs, botões, destaques). Hover: `#D9FF33`
+- Verde musgo `#1e2a0e` — superfícies escuras (sidebar, headers escuros, seções institucionais)
+- Verde label `#5a7a3a` — textos/ícones secundários verdes (checkmarks, labels)
+- Preto `#0a0a0a` / `#1a1a1a` — texto principal, fundos escuros
+- Cinza `#e0e0e0` — superfícies neutras, cards, inputs
+- Branco `#ffffff` — fundo principal
+- Cinza texto `#6b6b6b` — texto secundário
+- Cinza borda `#e5e5e5` — bordas, divisores
+
+**Tokens CSS:** `--neon`, `--moss`, `--moss-label`, `--black`, `--gray`, `--white` (ver `src/styles/tokens.css`)  
+**Tailwind:** classes `neon`, `moss`, `moss-label` + tokens semânticos `primary`, `accent`, etc.
+
+Tipografia: Playfair Display (headings) + Inter (body)  
 Animações: Framer Motion  
 Componentes base: shadcn/ui  
 Ícones: Lucide React

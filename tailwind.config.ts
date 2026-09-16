@@ -13,13 +13,12 @@ export default {
     },
     extend: {
       colors: {
-        // Paleta bruta da landing (estética Solidroad)
-        cream: 'hsl(var(--cream) / <alpha-value>)',
-        charcoal: 'hsl(var(--charcoal) / <alpha-value>)',
+        // Paleta de marca (unificada — landing + app)
         neon: 'hsl(var(--neon) / <alpha-value>)',
-        emerald: 'hsl(var(--emerald) / <alpha-value>)',
+        moss: 'hsl(var(--moss) / <alpha-value>)',
+        'moss-label': 'hsl(var(--moss-label) / <alpha-value>)',
 
-        // Tokens semânticos (interior do app)
+        // Tokens semânticos (consumidos por shadcn/ui)
         border: 'hsl(var(--border) / <alpha-value>)',
         input: 'hsl(var(--input) / <alpha-value>)',
         ring: 'hsl(var(--ring) / <alpha-value>)',
