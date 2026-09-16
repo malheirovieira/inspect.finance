@@ -1,46 +1,43 @@
 import { useState } from 'react';
-import { useCreateCardSubscription, useCreatePixCharge, useStartFreeTrial } from '@/hooks/useSubscription';
+import { useCreateCheckout, useStartFreeTrial } from '@/hooks/useSubscription';
 import type { BillingCycle, Plan } from '@/types/database';
 
-interface PixState {
-  plan: Plan;
-  data: { brCode: string; brCodeBase64: string; expiresAt: string };
-}
-
-/** Lógica compartilhada de escolha de plano + forma de pagamento (cartão redireciona, PIX abre o QR Code, trial libera na hora). */
-export function usePlanCheckout() {
-  const createCard = useCreateCardSubscription();
-  const createPix = useCreatePixCharge();
+/** Lógica compartilhada de escolha de plano + forma de pagamento (cartão e PIX redirecionam pro checkout hospedado da Asaas, trial libera na hora). */
+export function usePlanCheckout(onTrialStarted?: () => void, initialBillingCycle: BillingCycle = 'monthly') {
+  const createCheckout = useCreateCheckout();
   const startFreeTrial = useStartFreeTrial();
 
-  const [billingCycle, setBillingCycle] = useState<BillingCycle>('monthly');
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>(initialBillingCycle);
   const [pendingPlan, setPendingPlan] = useState<Plan | null>(null);
-  const [pixState, setPixState] = useState<PixState | null>(null);
+  const [pendingMethod, setPendingMethod] = useState<'CREDIT_CARD' | 'PIX' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [freeTrialStarted, setFreeTrialStarted] = useState(false);
 
   async function payWithCard(plan: Plan) {
     setError(null);
     setPendingPlan(plan);
+    setPendingMethod('CREDIT_CARD');
     try {
-      const result = await createCard.mutateAsync({ plan, billingCycle });
-      window.location.href = result.url;
+      const result = await createCheckout.mutateAsync({ plan, billingCycle, method: 'CREDIT_CARD' });
+      window.location.href = result.link;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível iniciar o pagamento.');
       setPendingPlan(null);
+      setPendingMethod(null);
     }
   }
 
   async function payWithPix(plan: Plan) {
     setError(null);
     setPendingPlan(plan);
+    setPendingMethod('PIX');
     try {
-      const pix = await createPix.mutateAsync({ plan, billingCycle });
-      setPixState({ plan, data: pix });
+      const result = await createCheckout.mutateAsync({ plan, billingCycle, method: 'PIX' });
+      window.location.href = result.link;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível gerar o PIX.');
-    } finally {
       setPendingPlan(null);
+      setPendingMethod(null);
     }
   }
 
@@ -50,6 +47,7 @@ export function usePlanCheckout() {
     try {
       await startFreeTrial.mutateAsync();
       setFreeTrialStarted(true);
+      onTrialStarted?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível iniciar o teste grátis.');
     } finally {
@@ -61,15 +59,13 @@ export function usePlanCheckout() {
     billingCycle,
     setBillingCycle,
     pendingPlan,
-    pixState,
-    setPixState,
     error,
     payWithCard,
     payWithPix,
     startTrial,
     freeTrialStarted,
-    isCardPending: createCard.isPending,
-    isPixPending: createPix.isPending,
+    isCardPending: createCheckout.isPending && pendingMethod === 'CREDIT_CARD',
+    isPixPending: createCheckout.isPending && pendingMethod === 'PIX',
     isTrialPending: startFreeTrial.isPending,
   };
 }

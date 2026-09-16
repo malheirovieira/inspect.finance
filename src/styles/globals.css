@@ -84,6 +84,64 @@ html {
   }
 }
 
+/* GreenSection (depoimentos) — carrossel de duas fileiras rolando em
+   direções opostas, cada uma com o conteúdo duplicado (mesmo truque do
+   .marquee-track acima) para o loop não ter salto. */
+.testimonial-marquee {
+  overflow: hidden;
+  width: 100%;
+  mask-image: linear-gradient(to right, transparent 0%, black 9%, black 91%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 9%, black 91%, transparent 100%);
+}
+
+.testimonial-track {
+  display: flex;
+  gap: 18px;
+  width: max-content;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.testimonial-track--a {
+  animation: testimonial-scroll-a 46s linear infinite;
+}
+
+.testimonial-track--b {
+  animation: testimonial-scroll-b 54s linear infinite;
+}
+
+@keyframes testimonial-scroll-a {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes testimonial-scroll-b {
+  from {
+    transform: translate3d(-50%, 0, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.testimonial-card {
+  margin: 0;
+  width: clamp(230px, 72vw, 330px);
+  flex-shrink: 0;
+  background: #ffffff;
+  border: 1px solid rgba(16, 18, 16, 0.07);
+  border-radius: 16px;
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 16px 34px -28px rgba(16, 18, 16, 0.5);
+}
+
 body::before {
   content: '';
   position: fixed;
@@ -110,6 +168,27 @@ body::before {
 
 @keyframes hero-label-blink {
   50% {
+    opacity: 0;
+  }
+}
+
+/* HeroSection — vídeo de fundo entra com fade e o véu escuro por cima
+   desaparece revelando o vídeo já em movimento (evita o "flash" do primeiro
+   frame antes do vídeo carregar). */
+@keyframes hero-video-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes hero-veil-fade {
+  from {
+    opacity: 1;
+  }
+  to {
     opacity: 0;
   }
 }

@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Send, Sparkles } from 'lucide-react';
 import { SectionPageTitle } from '@/components/dashboard/SectionPageTitle';
 import { useProfile } from '@/hooks/useProfile';
-import { hasProAccess } from '@/lib/planAccess';
+import { usePlans } from '@/hooks/usePlans';
+import { hasFeature } from '@/lib/features';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -20,11 +21,23 @@ const INITIAL_MESSAGES: ChatMessage[] = [
 export function FinanceIAPage() {
   const navigate = useNavigate();
   const { data: profile, isLoading: profileLoading } = useProfile();
+  const { data: plans, isLoading: plansLoading } = usePlans();
   const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
 
-  if (!profileLoading && !hasProAccess(profile?.plan)) {
+  // Enquanto perfil/planos ainda carregam, não mostra o conteúdo real nem o aviso de bloqueio —
+  // evita o "flash" de conteúdo liberado antes da checagem de plano terminar.
+  if (profileLoading || plansLoading) {
+    return (
+      <div className="page-view">
+        <SectionPageTitle title="Finance IA" />
+        <p className="empty-state">Carregando...</p>
+      </div>
+    );
+  }
+
+  if (!hasFeature(plans, profile?.plan, 'ai_insights')) {
     return (
       <div className="page-view">
         <SectionPageTitle title="Finance IA" />

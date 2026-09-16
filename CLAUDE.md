@@ -27,7 +27,7 @@ Permite que usuários unifiquem múltiplas contas e cartões em um único lugar,
 | Backend / BaaS | Supabase (Auth + PostgreSQL + Edge Functions + Storage + Realtime) |
 | Banco de Dados | PostgreSQL via Supabase com Row Level Security |
 | Deploy | Vercel (frontend) |
-| Pagamentos | AbacatePay (PIX nativo) |
+| Pagamentos | Asaas (cartão + PIX) |
 | Email | Resend |
 | IA | Google Gemini 1.5 Flash (free tier via Edge Function) |
 | Rate Limiting / Cache | Upstash Redis |
@@ -126,7 +126,9 @@ VITE_POSTHOG_KEY=
 
 # Supabase Edge Functions (via Supabase Dashboard → Secrets)
 GEMINI_API_KEY=
-ABACATEPAY_API_KEY=
+ASAAS_API_KEY=
+ASAAS_ENVIRONMENT=        # sandbox ou production
+ASAAS_WEBHOOK_TOKEN=
 RESEND_API_KEY=
 UPSTASH_REDIS_REST_URL=
 UPSTASH_REDIS_REST_TOKEN=
@@ -163,7 +165,7 @@ PLUGGY_CLIENT_SECRET=      # apenas quando integração bancária ativa (V1)
 | Visão consolidada casal | ❌ | ❌ | ✅ |
 | Limite IA queries/dia | — | 15 | 15 |
 
-Trial: 7 dias grátis, exclusivo do plano Basic — requer cartão cadastrado no ato do cadastro para liberar o teste. Nos planos Pro e Duo não há trial: a cobrança (mensal ou 12x no anual) começa direto na assinatura. No plano mensal, cancelamento livre a qualquer momento. E-mails de lembrete (trial Basic): D+1 (boas-vindas), D+4 (lembrete, 3 dias antes do fim), D+6 (urgência, 1 dia antes), D+7/expiração (cobrança ou confirmação).
+Trial: 7 dias grátis, exclusivo do plano Basic — **sem cartão nem PIX**, ativado direto no cadastro. Quem preferir pode assinar o Basic já pagando (cartão com renovação automática, ou PIX). Nos planos Pro e Duo não há trial: a cobrança (cartão ou PIX, mensal ou o valor cheio anual) começa direto na assinatura. No plano mensal, cancelamento livre a qualquer momento. E-mails de lembrete (trial Basic, pendente de implementação): D+1 (boas-vindas), D+4 (lembrete, 3 dias antes do fim), D+6 (urgência, 1 dia antes), D+7/expiração (CTA pra assinar).
 
 ---
 
@@ -209,10 +211,10 @@ Todo domingo, Edge Function cron gera um resumo financeiro para usuários Pro at
 | PostHog | Free tier (1M eventos/mês) | R$0 |
 | Resend | Free tier (3.000 emails/mês) | R$0 |
 | Gemini 1.5 Flash | Free tier (1M tokens/dia) | R$0 |
-| AbacatePay | ~0,99% por transação PIX | % do que entrar |
+| Asaas | taxa por transação (cartão/PIX) | % do que entrar |
 | Domínio inspect.finance | Anual | ~R$80/ano |
 
-**Custo fixo mensal no MVP: R$0**. Custos só surgem com volume (AbacatePay por transação) ou ao escalar para planos pagos dos serviços.
+**Custo fixo mensal no MVP: R$0**. Custos só surgem com volume (Asaas por transação) ou ao escalar para planos pagos dos serviços.
 
 ---
 
@@ -260,7 +262,7 @@ Consulte `/docs/roadmap.md` para o detalhamento completo.
 7. Metas de poupança
 8. Gamificação básica (conquistas)
 9. IA financeira (plano Pro — Gemini 1.5 Flash)
-10. Assinaturas (AbacatePay)
+10. Assinaturas (Asaas)
 
 ---
 

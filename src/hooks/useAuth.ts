@@ -51,7 +51,7 @@ export function useAuth() {
   }, []);
 
   const signUp = useCallback(async ({ email, password, fullName, plan }: SignUpParams) => {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -59,6 +59,10 @@ export function useAuth() {
       },
     });
     if (error) throw error;
+    // `data.session` só vem preenchido se "Confirm email" estiver desligado no projeto Supabase —
+    // com confirmação obrigatória, o cadastro cria o usuário mas a sessão só existe depois do
+    // clique no link do e-mail. Quem chama precisa saber disso pra decidir pra onde mandar a pessoa.
+    return { hasSession: Boolean(data.session) };
   }, []);
 
   const signOut = useCallback(async () => {
@@ -73,6 +77,11 @@ export function useAuth() {
     if (error) throw error;
   }, []);
 
+  const resendVerificationEmail = useCallback(async (email: string) => {
+    const { error } = await supabase.auth.resend({ type: 'signup', email });
+    if (error) throw error;
+  }, []);
+
   return {
     session: state.session,
     user: state.user,
@@ -83,5 +92,6 @@ export function useAuth() {
     signUp,
     signOut,
     resetPassword,
+    resendVerificationEmail,
   };
 }

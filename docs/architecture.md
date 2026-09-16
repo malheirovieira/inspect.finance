@@ -19,7 +19,7 @@ Arquitetura **Supabase-first** para o MVP e V1. Sem servidor dedicado (Spring Bo
          ┌─────────────┼─────────────┐
          │             │             │
 ┌────────▼──────┐  ┌───▼────┐  ┌────▼──────────┐
-│   Supabase    │  │ Upstash│  │   AbacatePay  │
+│   Supabase    │  │ Upstash│  │     Asaas     │
 │  ┌──────────┐ │  │ Redis  │  │  (Pagamentos) │
 │  │   Auth   │ │  │ (Rate  │  └───────────────┘
 │  ├──────────┤ │  │ Limit) │
@@ -103,7 +103,8 @@ Funções serverless para lógica que não deve rodar no frontend:
 | Função | Responsabilidade |
 |---|---|
 | `ai-financial-analysis` | Chama Gemini, valida rate limit via Upstash, retorna análise |
-| `process-webhook-abacatepay` | Recebe webhook de pagamento, atualiza status da assinatura |
+| `create-checkout` | Cria checkout (cartão ou PIX) na Asaas, devolve link hospedado |
+| `process-webhook-asaas` | Recebe webhook de pagamento, atualiza status da assinatura |
 | `generate-recurring-transactions` | Cron diário: gera transações recorrentes do dia |
 | `calculate-achievements` | Avalia conquistas após cada transação |
 | `pluggy-sync` | Sincroniza transações via Pluggy (Pro — V1) |
@@ -163,17 +164,17 @@ Edge Function cron dispara todo domingo à meia-noite:
 
 ---
 
-## Pagamentos — AbacatePay
+## Pagamentos — Asaas
 
 ### Fluxo de Assinatura
 ```
-Usuário escolhe plano
+Usuário escolhe plano + forma de pagamento (cartão ou PIX)
     ↓
-Frontend chama Edge Function: cria cobrança no AbacatePay
+Frontend chama Edge Function create-checkout: cria checkout na Asaas
     ↓
-Retorna link de pagamento → usuário paga via PIX
+Retorna link do checkout hospedado → usuário paga lá (cartão ou PIX)
     ↓
-AbacatePay dispara webhook → Edge Function process-webhook-abacatepay
+Asaas dispara webhook → Edge Function process-webhook-asaas
     ↓
 Atualiza tabela subscriptions: status = 'active'
     ↓
@@ -181,9 +182,9 @@ Usuário recebe acesso ao plano
 ```
 
 ### Eventos de Webhook tratados
-- `payment.confirmed` → ativa/renova assinatura
-- `payment.overdue` → marca como `past_due`, mantém acesso por grace period (3 dias)
-- `payment.cancelled` → cancela assinatura ao fim do período
+- `PAYMENT_CONFIRMED` / `PAYMENT_RECEIVED` → ativa/renova assinatura
+- `PAYMENT_OVERDUE` → marca como `past_due`, mantém acesso por grace period (3 dias)
+- `SUBSCRIPTION_DELETED` / `SUBSCRIPTION_INACTIVATED` → cancela assinatura ao fim do período
 
 ---
 

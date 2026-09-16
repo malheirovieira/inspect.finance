@@ -51,8 +51,8 @@
 - [ ] Guard de acesso por plano (bloqueia IA no Basic)
 
 ### Fase 6 — Assinaturas e Lançamento (Semanas 10-12)
-- [ ] Integração AbacatePay (geração de cobrança + link PIX)
-- [ ] Edge Function `process-webhook-abacatepay`
+- [x] Integração Asaas (checkout cartão + PIX via `create-checkout`)
+- [x] Edge Function `process-webhook-asaas`
 - [ ] Página de planos e upgrade
 - [ ] Trial de 7 dias (plano Basic) com contador regressivo
 - [ ] E-mails transacionais via Resend (boas-vindas, trial, pagamento)

@@ -28,3 +28,7 @@ Thumbs.db
 # supabase local
 supabase/.branches/
 supabase/.temp/
+
+# referência de design solta na raiz (já extraída pro app em src/pages/LandingPage.tsx
+# e public/videos/) — não faz parte do build
+nova_landing_page/

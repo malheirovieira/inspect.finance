@@ -56,7 +56,7 @@
 
 ### Edge Functions
 - Validação de JWT em todas as funções que recebem dados de usuário
-- Webhook do AbacatePay: validação de assinatura HMAC (verificar payload genuíno)
+- Webhook da Asaas: validação via header `asaas-access-token` comparado contra `ASAAS_WEBHOOK_TOKEN`
 - Inputs sempre sanitizados e validados com Zod antes de qualquer processamento
 
 ### Frontend → Supabase
@@ -130,7 +130,7 @@
 - [ ] Nenhum `service_role` key no código frontend
 - [ ] `.env.local` no `.gitignore`
 - [ ] Rate limiting funcionando (testar manualmente)
-- [ ] Webhook do AbacatePay com validação de assinatura
+- [ ] Webhook da Asaas com validação de `asaas-access-token`
 - [ ] Confirmação de e-mail ativa no Supabase
 - [ ] HTTPS funcionando em produção (Vercel)
 - [ ] Política de Privacidade publicada

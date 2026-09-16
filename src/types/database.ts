@@ -23,6 +23,8 @@ export interface Profile {
   plan_status: PlanStatus;
   trial_ends_at: string | null;
   onboarding_completed_at: string | null;
+  onboarding_completed: boolean;
+  onboarding_answers: Record<string, unknown> | null;
   ai_queries_today: number;
   created_at: string;
   updated_at: string;
@@ -145,6 +147,65 @@ export interface DuoLink {
   updated_at: string;
 }
 
+export interface Subscription {
+  id: string;
+  user_id: string;
+  plan: Plan;
+  billing_cycle: BillingCycle;
+  status: SubscriptionStatus;
+  payment_provider: string;
+  external_id: string | null;
+  amount_cents: number;
+  current_period_start: string | null;
+  current_period_end: string | null;
+  cancel_at_period_end: boolean;
+  cancelled_at: string | null;
+  grace_period_end: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BillingProduct {
+  id: string;
+  plan: Plan;
+  billing_cycle: BillingCycle;
+  abacatepay_product_id: string;
+  price_cents: number;
+  created_at: string;
+}
+
+export type FeatureKey =
+  | 'dashboard_basic'
+  | 'dashboard_advanced'
+  | 'transactions'
+  | 'financial_agenda'
+  | 'goals_basic'
+  | 'goals_advanced'
+  | 'economy_tracking'
+  | 'ai_insights'
+  | 'bank_integration'
+  | 'reports_basic'
+  | 'reports_advanced'
+  | 'duo_view';
+
+export interface PlanRow {
+  id: string;
+  name: Plan;
+  display_name: string;
+  features: FeatureKey[];
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface WebhookEvent {
+  id: string;
+  provider: string;
+  event_id: string;
+  event_type: string;
+  payload: Record<string, unknown>;
+  processed_at: string;
+}
+
 type Table<Row> = {
   Row: Row & Record<string, unknown>;
   Insert: Partial<Row> & Record<string, unknown>;
@@ -166,6 +227,10 @@ export type Database = {
       goals: Table<Goal>;
       goal_contributions: Table<GoalContribution>;
       duo_links: Table<DuoLink>;
+      subscriptions: Table<Subscription>;
+      billing_products: Table<BillingProduct>;
+      plans: Table<PlanRow>;
+      webhook_events: Table<WebhookEvent>;
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

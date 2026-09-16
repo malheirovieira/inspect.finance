@@ -14,6 +14,9 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  // Quem decide se a conta tem acesso (trial válido, assinatura ativa, nunca ativou, vencida...)
+  // é só o ProtectedRoute, uma vez, ao entrar em /app — nada aqui reavalia isso, pra não ter duas
+  // fontes de verdade brigando e ficando num vai-e-volta entre /login e /app.
   if (!loading && isAuthenticated) {
     return <Navigate to="/app" replace />;
   }
@@ -24,7 +27,7 @@ export function LoginPage() {
     setSubmitting(true);
     try {
       await signIn(email, password);
-      navigate('/app');
+      navigate('/app', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível entrar. Tente novamente.');
     } finally {
@@ -94,11 +97,7 @@ export function LoginPage() {
 
           {error && <p className="text-sm text-destructive">{error}</p>}
 
-          <Button
-            type="submit"
-            className="w-full bg-[var(--color-accent)] text-[#0A0A0A] hover:bg-[#D9FF33]"
-            disabled={submitting}
-          >
+          <Button type="submit" className="w-full bg-[var(--color-accent)] text-[#0A0A0A] hover:bg-[#D9FF33]" disabled={submitting}>
             {submitting ? 'Entrando...' : 'Entrar'}
           </Button>
         </form>

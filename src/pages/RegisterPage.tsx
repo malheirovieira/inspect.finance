@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Link, Navigate, useLocation } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Lock, Mail, User } from 'lucide-react';
 import { z } from 'zod';
 import { useAuth } from '@/hooks/useAuth';
@@ -9,15 +9,22 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import type { Plan } from '@/types/database';
 
-const registerSchema = z.object({
-  fullName: z.string().min(2, 'Informe seu nome completo'),
-  email: z.string().email('E-mail inválido'),
-  password: z
-    .string()
-    .min(8, 'Mínimo de 8 caracteres')
-    .regex(/[A-Z]/, 'Precisa de ao menos 1 letra maiúscula')
-    .regex(/[0-9]/, 'Precisa de ao menos 1 número'),
-});
+const registerSchema = z
+  .object({
+    fullName: z.string().min(2, 'Informe seu nome completo'),
+    email: z.string().email('E-mail inválido'),
+    password: z
+      .string()
+      .min(8, 'Mínimo de 8 caracteres')
+      .regex(/[A-Z]/, 'Precisa de ao menos 1 letra maiúscula')
+      .regex(/[0-9]/, 'Precisa de ao menos 1 número'),
+    confirmPassword: z.string(),
+    acceptedTerms: z.literal(true, { errorMap: () => ({ message: 'Você precisa aceitar os Termos de Uso e a Política de Privacidade' }) }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'As senhas não coincidem',
+    path: ['confirmPassword'],
+  });
 
 const PLANS: { id: Plan; name: string; priceMonthly: string; priceAnnual: string }[] = [
   { id: 'basic', name: 'Basic', priceMonthly: 'R$19,90/mês', priceAnnual: 'R$15,90/mês' },
@@ -42,14 +49,17 @@ function getInitialBillingCycle(state: unknown): BillingCycle {
 export function RegisterPage() {
   const { signUp, isAuthenticated, loading } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [plan, setPlan] = useState<Plan>(() => getInitialPlan(location.state));
   const [billingCycle, setBillingCycle] = useState<BillingCycle>(() => getInitialBillingCycle(location.state));
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [needsEmailConfirmation, setNeedsEmailConfirmation] = useState(false);
 
   if (!loading && isAuthenticated) {
     return <Navigate to="/app" replace />;
@@ -59,7 +69,7 @@ export function RegisterPage() {
     event.preventDefault();
     setError(null);
 
-    const result = registerSchema.safeParse({ fullName, email, password });
+    const result = registerSchema.safeParse({ fullName, email, password, confirmPassword, acceptedTerms });
     if (!result.success) {
       setError(result.error.issues[0]?.message ?? 'Dados inválidos');
       return;
@@ -67,8 +77,18 @@ export function RegisterPage() {
 
     setSubmitting(true);
     try {
-      await signUp({ email, password, fullName, plan });
-      setSuccess(true);
+      const { hasSession } = await signUp({ email, password, fullName, plan });
+      if (hasSession) {
+        // Ativação (trial grátis ou pagamento com cartão/PIX) acontece toda em /completar-pagamento
+        // — a confirmação de e-mail é só um lembrete não-bloqueante (EmailVerificationBanner),
+        // nunca uma condição pra liberar o acesso.
+        navigate('/completar-pagamento', { state: { plan, billingCycle }, replace: true });
+      } else {
+        // Projeto com "Confirm email" ligado no Supabase: não existe sessão até clicar no link do
+        // e-mail, então não dá pra ir pro checkout ainda — assim que confirmar e entrar, o
+        // ProtectedRoute já manda pra /completar-pagamento sozinho.
+        setNeedsEmailConfirmation(true);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível criar sua conta.');
     } finally {
@@ -76,15 +96,14 @@ export function RegisterPage() {
     }
   }
 
-  if (success) {
+  if (needsEmailConfirmation) {
     return (
       <div className="flex min-h-screen items-center justify-center px-4" style={{ background: '#e0e0e0' }}>
         <div className="glass-card w-full max-w-md p-10 text-center">
           <h1 className="text-lg font-semibold">Confirme seu e-mail</h1>
           <p className="mt-3 text-sm text-muted-foreground">
-            Enviamos um link de confirmação para <strong>{email}</strong>. Depois de confirmar, é só entrar e completar o pagamento do
-            plano {plan === 'basic' ? 'Basic (com o trial de 7 dias)' : PLANS.find((p) => p.id === plan)?.name} — cartão ou PIX,
-            você escolhe na hora.
+            Enviamos um link de confirmação para <strong>{email}</strong>. Depois de confirmar, é só entrar — a escolha de plano e
+            pagamento continua de onde parou.
           </p>
           <Link to="/login" className="mt-6 inline-block text-sm font-medium text-[#1e2a0e] hover:underline">
             Voltar para o login
@@ -154,6 +173,22 @@ export function RegisterPage() {
               />
             </div>
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">Confirmar senha</Label>
+            <div className="icon-input-wrapper">
+              <Lock />
+              <Input
+                id="confirmPassword"
+                type="password"
+                autoComplete="new-password"
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Repita a senha"
+                className="icon-input focus-visible:ring-0 focus-visible:ring-offset-0"
+              />
+            </div>
+          </div>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -207,11 +242,30 @@ export function RegisterPage() {
             </div>
           </div>
 
+          <label className="flex items-start gap-2 text-xs text-muted-foreground">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={acceptedTerms}
+              onChange={(e) => setAcceptedTerms(e.target.checked)}
+            />
+            <span>
+              Li e aceito os{' '}
+              <a href="#" className="font-medium text-[#1e2a0e] hover:underline">
+                Termos de Uso
+              </a>{' '}
+              e a{' '}
+              <a href="#" className="font-medium text-[#1e2a0e] hover:underline">
+                Política de Privacidade
+              </a>
+            </span>
+          </label>
+
           {error && <p className="text-sm text-destructive">{error}</p>}
 
           <Button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || !acceptedTerms}
             className="w-full bg-[var(--color-accent)] text-[#0A0A0A] hover:bg-[#D9FF33]"
           >
             {submitting ? 'Criando conta...' : plan === 'basic' ? 'Começar trial de 7 dias' : 'Assinar agora'}

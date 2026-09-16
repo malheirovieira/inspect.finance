@@ -1,19 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
-import type { BillingCycle, Plan } from '@/types/database';
-
-interface Subscription {
-  id: string;
-  plan: Plan;
-  billing_cycle: BillingCycle;
-  status: 'trial' | 'active' | 'cancelled' | 'past_due' | 'expired';
-  current_period_start: string | null;
-  current_period_end: string | null;
-  cancel_at_period_end: boolean;
-  cancelled_at: string | null;
-  created_at: string;
-}
+import type { BillingCycle, Plan, Subscription } from '@/types/database';
 
 export function useCurrentSubscription() {
   const { user } = useAuth();
@@ -32,45 +20,25 @@ export function useCurrentSubscription() {
       return data;
     },
     enabled: Boolean(user),
+    retry: 2,
   });
 }
 
-interface PlanInput {
+interface CheckoutInput {
   plan: Plan;
   billingCycle: BillingCycle;
+  method: 'CREDIT_CARD' | 'PIX';
 }
 
-/** Cria a assinatura via cartão na AbacatePay e devolve a URL de checkout hospedada por eles. */
-export function useCreateCardSubscription() {
+/** Cria o checkout (cartão recorrente ou PIX avulso) na Asaas e devolve a URL da página hospedada. */
+export function useCreateCheckout() {
   return useMutation({
-    mutationFn: async ({ plan, billingCycle }: PlanInput) => {
-      const { data, error } = await supabase.functions.invoke<{ url: string; error?: string }>('create-subscription', {
-        body: { plan, billingCycle, origin: window.location.origin },
+    mutationFn: async ({ plan, billingCycle, method }: CheckoutInput) => {
+      const { data, error } = await supabase.functions.invoke<{ link: string; error?: string }>('create-checkout', {
+        body: { plan, billingCycle, method },
       });
       if (error) throw error;
-      if (!data || data.error) throw new Error(data?.error ?? 'Não foi possível iniciar a assinatura');
-      return data;
-    },
-  });
-}
-
-interface PixCharge {
-  id: string;
-  brCode: string;
-  brCodeBase64: string;
-  expiresAt: string;
-  error?: string;
-}
-
-/** Gera uma cobrança PIX avulsa (mensal ou o valor cheio anual) para o plano escolhido. */
-export function useCreatePixCharge() {
-  return useMutation({
-    mutationFn: async ({ plan, billingCycle }: PlanInput) => {
-      const { data, error } = await supabase.functions.invoke<PixCharge>('create-pix-charge', {
-        body: { plan, billingCycle },
-      });
-      if (error) throw error;
-      if (!data || data.error) throw new Error(data?.error ?? 'Não foi possível gerar o PIX');
+      if (!data || data.error) throw new Error(data?.error ?? 'Não foi possível iniciar o pagamento');
       return data;
     },
   });

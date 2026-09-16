@@ -372,8 +372,8 @@ CREATE TABLE subscriptions (
   billing_cycle         TEXT NOT NULL DEFAULT 'monthly' CHECK (billing_cycle IN ('monthly', 'annual')),
   status                TEXT NOT NULL DEFAULT 'trial'
                           CHECK (status IN ('trial', 'active', 'cancelled', 'past_due', 'expired')),
-  payment_provider      TEXT NOT NULL DEFAULT 'abacatepay',
-  external_id           TEXT,              -- ID no AbacatePay
+  payment_provider      TEXT NOT NULL DEFAULT 'asaas',
+  external_id           TEXT,              -- ID da assinatura/pagamento na Asaas
   amount_cents          INTEGER NOT NULL,  -- valor em centavos
   current_period_start  DATE,
   current_period_end    DATE,

@@ -22,7 +22,7 @@ Registro de decisões arquiteturais e de produto. Cada decisão documenta o cont
 ## ADR-002 — Gateway de Pagamento: AbacatePay
 
 **Data:** 2025-09  
-**Status:** Decidido (revisar se não suportar recorrência nativa)
+**Status:** Substituído — ver ADR-011
 
 **Contexto:** SaaS brasileiro precisa de PIX como método primário. Stripe tem taxas mais altas e PIX é trabalhoso.
 
@@ -137,3 +137,26 @@ Registro de decisões arquiteturais e de produto. Cada decisão documenta o cont
 - C: Conta principal + convidado com acesso limitado
 
 **Decisão:** Opção A. Cada pessoa mantém sua conta e privacidade. A tabela `duo_links` registra o vínculo. Metas com `duo_link_id` são compartilhadas. Visão consolidada via query que agrega as duas contas.
+
+---
+
+## ADR-011 — Substituição do Gateway de Pagamento: AbacatePay → Asaas
+
+**Data:** 2026-09  
+**Status:** Decidido
+
+**Contexto:** Em produção sandbox, a AbacatePay rejeitou a criação de assinatura via cartão
+(`"CARD is not available for this store"`), provavelmente por exigir verificação de conta que o
+modo sandbox não libera. Sem previsão de resolução, e com cartão recorrente sendo essencial para
+os planos Pro/Duo, decidiu-se trocar de gateway em vez de esperar.
+
+**Opções:**
+- Aguardar liberação de cartão na AbacatePay (KYC/verificação de conta)
+- Asaas: checkout unificado (`POST /v3/checkouts`) cobre cartão recorrente nativo e PIX avulso na
+  mesma API, com página de pagamento hospedada — sandbox já libera cartão
+
+**Decisão:** Migrar por completo para a Asaas. Arquitetura isolada do gateway (herdada da ADR-002)
+tornou a troca simples: apenas as Edge Functions de checkout/webhook/cancelamento e os hooks de
+frontend que as chamam precisaram mudar — nenhuma mudança de schema. Diferença de UX: o PIX da
+Asaas também redireciona para uma página hospedada (sem QR Code embutido no app, que a AbacatePay
+oferecia via Transparent Checkout).

@@ -1,25 +1,27 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const ABACATEPAY_BASE_URL = 'https://api.abacatepay.com/v2';
-
-async function abacatepay<T>(path: string, options: { method?: string; body?: unknown } = {}): Promise<T> {
-  const apiKey = Deno.env.get('ABACATEPAY_API_KEY');
-  if (!apiKey) throw new Error('ABACATEPAY_API_KEY não configurada');
-  const response = await fetch(`${ABACATEPAY_BASE_URL}${path}`, {
-    method: options.method ?? 'GET',
-    headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: options.body ? JSON.stringify(options.body) : undefined,
-  });
-  const json = await response.json();
-  if (!response.ok || json.error) throw new Error(`AbacatePay ${path} falhou: ${json.error ?? response.statusText}`);
-  return json.data as T;
-}
-
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
+
+function asaasBaseUrl(): string {
+  const env = Deno.env.get('ASAAS_ENVIRONMENT') ?? 'sandbox';
+  return env === 'production' ? 'https://api.asaas.com/v3' : 'https://api-sandbox.asaas.com/v3';
+}
+
+async function asaas<T>(path: string, options: { method?: string } = {}): Promise<T> {
+  const apiKey = Deno.env.get('ASAAS_API_KEY');
+  if (!apiKey) throw new Error('ASAAS_API_KEY não configurada');
+  const response = await fetch(`${asaasBaseUrl()}${path}`, {
+    method: options.method ?? 'GET',
+    headers: { access_token: apiKey, 'Content-Type': 'application/json' },
+  });
+  const json = await response.json();
+  if (!response.ok || json.errors) throw new Error(`Asaas ${path} falhou: ${JSON.stringify(json.errors ?? json)}`);
+  return json as T;
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: CORS_HEADERS });
@@ -50,11 +52,12 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Nenhuma assinatura encontrada' }), { status: 404, headers: CORS_HEADERS });
     }
 
-    // Assinatura via cartão: cancela também do lado da AbacatePay (evita cobrança automática futura).
-    if (subscription.external_id?.startsWith('subs_')) {
-      await abacatepay('/subscriptions/cancel', { method: 'POST', body: { id: subscription.external_id } });
+    // Assinatura via cartão (recorrente na Asaas): cancela também do lado deles, evitando
+    // cobrança automática futura. Assinatura via PIX é sempre avulsa — não há nada recorrente
+    // do lado da Asaas pra cancelar.
+    if (subscription.external_id?.startsWith('sub_')) {
+      await asaas(`/subscriptions/${subscription.external_id}`, { method: 'DELETE' });
     }
-    // Assinatura via PIX não tem cobrança recorrente na AbacatePay — cancelar aqui só marca a intenção de não renovar.
 
     const { error } = await serviceClient
       .from('subscriptions')

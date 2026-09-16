@@ -1,7 +1,5 @@
-import { useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import { SectionPageTitle } from '@/components/dashboard/SectionPageTitle';
-import { PixCheckout } from '@/components/PixCheckout';
 import { useProfile } from '@/hooks/useProfile';
 import { useCancelSubscription, useCurrentSubscription } from '@/hooks/useSubscription';
 import { usePlanCheckout } from '@/hooks/usePlanCheckout';
@@ -29,12 +27,10 @@ const ANNUAL_PRICES: Record<Plan, string> = {
 };
 
 export function AssinaturaPage() {
-  const navigate = useNavigate();
   const { data: profile, isLoading } = useProfile();
   const { data: subscription } = useCurrentSubscription();
   const cancelSubscription = useCancelSubscription();
-  const { billingCycle, setBillingCycle, pendingPlan, pixState, setPixState, error, payWithCard, payWithPix, isCardPending, isPixPending } =
-    usePlanCheckout();
+  const { billingCycle, setBillingCycle, pendingPlan, error, payWithCard, payWithPix, isCardPending, isPixPending } = usePlanCheckout();
 
   const canCancel = subscription && subscription.status !== 'cancelled' && !subscription.cancel_at_period_end;
 
@@ -48,14 +44,16 @@ export function AssinaturaPage() {
         <div className="couple-plan-note">
           <strong>
             Plano atual: {PLAN_LABELS[profile.plan]} ·{' '}
-            {hasBillingAccess(profile) ? (PLAN_STATUS_LABELS[profile.plan_status] ?? profile.plan_status) : 'Pagamento pendente'}
+            {hasBillingAccess(profile, subscription) ? (PLAN_STATUS_LABELS[profile.plan_status] ?? profile.plan_status) : 'Pagamento pendente'}
           </strong>
           <span>
-            {profile.plan_status === 'trial' && profile.trial_ends_at
-              ? `Teste grátis termina em ${formatDate(profile.trial_ends_at)}`
-              : subscription?.current_period_end
-                ? `Renova em ${formatDate(subscription.current_period_end)}`
-                : PLAN_PRICES[profile.plan]}
+            {profile.plan_status === 'cancelled' && subscription?.current_period_end
+              ? `Assinatura cancelada — acesso até ${formatDate(subscription.current_period_end)}`
+              : profile.plan_status === 'trial' && profile.trial_ends_at
+                ? `Teste grátis termina em ${formatDate(profile.trial_ends_at)}`
+                : subscription?.current_period_end
+                  ? `Renova em ${formatDate(subscription.current_period_end)}`
+                  : PLAN_PRICES[profile.plan]}
           </span>
         </div>
       )}
@@ -81,7 +79,7 @@ export function AssinaturaPage() {
 
       <div className="goals-grid">
         {(Object.keys(PLAN_LABELS) as Plan[]).map((plan) => {
-          const isCurrent = profile?.plan === plan && hasBillingAccess(profile);
+          const isCurrent = profile?.plan === plan && hasBillingAccess(profile, subscription);
           const isPending = pendingPlan === plan && (isCardPending || isPixPending);
           return (
             <article className="goal-card" key={plan}>
@@ -121,17 +119,6 @@ export function AssinaturaPage() {
           );
         })}
       </div>
-
-      {pixState && (
-        <PixCheckout
-          pix={pixState.data}
-          onClose={() => setPixState(null)}
-          onConfirmed={() => {
-            setPixState(null);
-            navigate('/app/dashboard');
-          }}
-        />
-      )}
     </div>
   );
 }

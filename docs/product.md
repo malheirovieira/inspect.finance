@@ -92,7 +92,7 @@ O usuário típico:
 | 10 | Metas de poupança com barra de progresso |
 | 11 | Gamificação: conquistas e títulos por comportamento |
 | 12 | IA financeira — análise de saúde (Pro) |
-| 13 | Assinatura via AbacatePay + trial de 7 dias (plano Basic) |
+| 13 | Assinatura via Asaas (cartão + PIX) + trial de 7 dias (plano Basic) |
 | 14 | E-mail transacional (Resend): boas-vindas, confirmação, fatura |
 
 ### V1 — Após primeiros pagantes

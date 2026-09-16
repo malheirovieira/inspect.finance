@@ -96,3 +96,11 @@
 .nav-item.active {
   background: #e0e0e0;
 }
+.email-verification-banner { display:flex; align-items:center; gap:10px; margin-bottom:20px; padding:12px 18px; color:#8a6d1f; background:#fdf3d9; border:1px solid #f0e0a8; border-radius:10px; font-size:12px; }
+.email-verification-banner svg { flex-shrink:0; width:16px; height:16px; }
+.email-verification-banner span { flex:1; }
+.email-verification-banner button { padding:7px 12px; color:#8a6d1f; background:#f7e7ba; border-radius:7px; font-size:11px; font-weight:600; white-space:nowrap; }
+.email-verification-banner button:disabled { opacity:.6; }
+.panel-dots { display:flex; justify-content:center; gap:6px; }
+.panel-dots button { width:7px; height:7px; padding:0; background:#dbe2df; border-radius:50%; }
+.panel-dots button.active { width:18px; border-radius:4px; background:var(--coral); }

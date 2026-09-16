@@ -1,15 +1,26 @@
 import { useEffect } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useCurrentSubscription } from '@/hooks/useSubscription';
 import { usePlanCheckout } from '@/hooks/usePlanCheckout';
-import { PixCheckout } from '@/components/PixCheckout';
 import { hasBillingAccess, PLAN_LABELS, PLAN_PRICES } from '@/lib/planAccess';
 import { formatDate } from '@/lib/datetime';
 import { cn } from '@/lib/utils';
-import type { Plan } from '@/types/database';
+import type { BillingCycle, Plan } from '@/types/database';
+
+const VALID_PLANS: Plan[] = ['basic', 'pro', 'duo'];
+
+function getInitialPlan(state: unknown): Plan | null {
+  const requested = (state as { plan?: string } | null)?.plan;
+  return VALID_PLANS.includes(requested as Plan) ? (requested as Plan) : null;
+}
+
+function getInitialBillingCycle(state: unknown): BillingCycle {
+  const requested = (state as { billingCycle?: string } | null)?.billingCycle;
+  return requested === 'annual' ? 'annual' : 'monthly';
+}
 
 const PLAN_FEATURES: Record<Plan, string[]> = {
   basic: ['Dashboard configurável', 'Gamificação e metas', 'Importação OFX/CSV', 'Lançamentos manuais', '7 dias de teste grátis'],
@@ -30,15 +41,15 @@ const ANNUAL_PRICES: Record<Plan, string> = {
  */
 export function CompletePaymentPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, isAuthenticated, loading } = useAuth();
   const { data: profile, isLoading: profileLoading } = useProfile();
   const { data: subscription } = useCurrentSubscription();
+  const preselectedPlan = getInitialPlan(location.state);
   const {
     billingCycle,
     setBillingCycle,
     pendingPlan,
-    pixState,
-    setPixState,
     error,
     payWithCard,
     payWithPix,
@@ -46,13 +57,13 @@ export function CompletePaymentPage() {
     isCardPending,
     isPixPending,
     isTrialPending,
-  } = usePlanCheckout();
+  } = usePlanCheckout(() => navigate('/app/dashboard', { replace: true }), getInitialBillingCycle(location.state));
 
   const canStartFreeTrial = !subscription;
 
   useEffect(() => {
-    if (hasBillingAccess(profile)) navigate('/app/dashboard', { replace: true });
-  }, [profile, navigate]);
+    if (hasBillingAccess(profile, subscription)) navigate('/app/dashboard', { replace: true });
+  }, [profile, subscription, navigate]);
 
   if (!loading && !isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -97,7 +108,13 @@ export function CompletePaymentPage() {
             const isPending = pendingPlan === plan && (isCardPending || isPixPending || isTrialPending);
             const showFreeTrial = plan === 'basic' && canStartFreeTrial;
             return (
-              <div key={plan} className="flex flex-col rounded-md border border-muted-foreground/20 p-4">
+              <div
+                key={plan}
+                className={cn(
+                  'flex flex-col rounded-md border p-4',
+                  plan === preselectedPlan ? 'border-[#1e2a0e] ring-1 ring-[#1e2a0e]' : 'border-muted-foreground/20',
+                )}
+              >
                 <span className="text-xs font-medium text-muted-foreground">{billingCycle === 'monthly' ? PLAN_PRICES[plan] : ANNUAL_PRICES[plan]}</span>
                 <h3 className="mt-1 text-base font-semibold">{PLAN_LABELS[plan]}</h3>
                 <ul className="mt-3 flex-1 space-y-2">
@@ -145,17 +162,6 @@ export function CompletePaymentPage() {
           })}
         </div>
       </div>
-
-      {pixState && (
-        <PixCheckout
-          pix={pixState.data}
-          onClose={() => setPixState(null)}
-          onConfirmed={() => {
-            setPixState(null);
-            navigate('/app/dashboard', { replace: true });
-          }}
-        />
-      )}
     </div>
   );
 }

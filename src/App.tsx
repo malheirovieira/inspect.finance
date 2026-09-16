@@ -4,6 +4,8 @@ import { LandingPage } from '@/pages/LandingPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { RegisterPage } from '@/pages/RegisterPage';
 import { ForgotPasswordPage } from '@/pages/ForgotPasswordPage';
+import { CompletePaymentPage } from '@/pages/CompletePaymentPage';
+import { PlanExpiredPage } from '@/pages/PlanExpiredPage';
 import { AppLayout } from '@/components/AppLayout';
 import { DashboardPage } from '@/pages/app/DashboardPage';
 import { ReceitasPage } from '@/pages/app/ReceitasPage';
@@ -15,6 +17,8 @@ import { RelatoriosPage } from '@/pages/app/RelatoriosPage';
 import { FinanceIAPage } from '@/pages/app/FinanceIAPage';
 import { ColaboradoresPage } from '@/pages/app/ColaboradoresPage';
 import { AssinaturaPage } from '@/pages/app/AssinaturaPage';
+import { OnboardingPage } from '@/pages/app/OnboardingPage';
+import { ParametrizacoesPage } from '@/pages/app/ParametrizacoesPage';
 import { EmptyPage } from '@/components/dashboard/EmptyPage';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { useSmoothScroll } from '@/hooks/useSmoothScroll';
@@ -32,6 +36,8 @@ export function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/cadastro" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/completar-pagamento" element={<CompletePaymentPage />} />
+          <Route path="/plano-expirado" element={<PlanExpiredPage />} />
           <Route
             path="/app"
             element={
@@ -50,8 +56,9 @@ export function App() {
             <Route path="relatorios" element={<RelatoriosPage />} />
             <Route path="finance-ia" element={<FinanceIAPage />} />
             <Route path="colaboradores" element={<ColaboradoresPage />} />
-            <Route path="parametrizacoes" element={<EmptyPage title="Parametrizações" />} />
+            <Route path="parametrizacoes" element={<ParametrizacoesPage />} />
             <Route path="assinatura" element={<AssinaturaPage />} />
+            <Route path="onboarding" element={<OnboardingPage />} />
             <Route path="ajuda" element={<EmptyPage title="Ajuda" />} />
             <Route path="*" element={<Navigate to="dashboard" replace />} />
           </Route>

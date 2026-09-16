@@ -4,7 +4,8 @@ import { MoreHorizontal, X } from 'lucide-react';
 import { SectionPageTitle } from '@/components/dashboard/SectionPageTitle';
 import { useDuoLinks, useInviteDuoPartner } from '@/hooks/useDuoLinks';
 import { useProfile } from '@/hooks/useProfile';
-import { hasDuoAccess } from '@/lib/planAccess';
+import { usePlans } from '@/hooks/usePlans';
+import { hasFeature } from '@/lib/features';
 import { formatDate } from '@/lib/datetime';
 
 const STATUS_LABELS: Record<string, string> = {
@@ -21,13 +22,25 @@ function initialsFromEmail(email: string) {
 export function ColaboradoresPage() {
   const navigate = useNavigate();
   const { data: profile, isLoading: profileLoading } = useProfile();
+  const { data: plans, isLoading: plansLoading } = usePlans();
   const { data: links = [], isLoading } = useDuoLinks();
   const inviteDuoPartner = useInviteDuoPartner();
 
   const [showForm, setShowForm] = useState(false);
   const [email, setEmail] = useState('');
 
-  if (!profileLoading && !hasDuoAccess(profile?.plan)) {
+  // Enquanto perfil/planos ainda carregam, não mostra o conteúdo real nem o aviso de bloqueio —
+  // evita o "flash" de conteúdo liberado antes da checagem de plano terminar.
+  if (profileLoading || plansLoading) {
+    return (
+      <div className="page-view">
+        <SectionPageTitle title="Colaboradores" />
+        <p className="empty-state">Carregando...</p>
+      </div>
+    );
+  }
+
+  if (!hasFeature(plans, profile?.plan, 'duo_view')) {
     return (
       <div className="page-view">
         <SectionPageTitle title="Colaboradores" />

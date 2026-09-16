@@ -17,14 +17,17 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
-import { hasDuoAccess, hasProAccess, PLAN_LABELS } from '@/lib/planAccess';
-import type { Plan } from '@/types/database';
+import { usePlans } from '@/hooks/usePlans';
+import { hasFeature } from '@/lib/features';
+import { planDisplayLabel } from '@/lib/planAccess';
+import type { FeatureKey, Plan, PlanRow } from '@/types/database';
 
 interface NavItem {
   label: string;
   to: string;
   icon: LucideIcon;
-  requiresPlan?: 'pro' | 'duo';
+  requiresFeature?: FeatureKey;
+  badge?: string;
 }
 
 const MENU_ITEMS: NavItem[] = [
@@ -35,8 +38,8 @@ const MENU_ITEMS: NavItem[] = [
   { label: 'Bancos', to: '/app/bancos', icon: Landmark },
   { label: 'Metas', to: '/app/metas', icon: Target },
   { label: 'Relatórios', to: '/app/relatorios', icon: BarChart3 },
-  { label: 'Finance IA', to: '/app/finance-ia', icon: Sparkles, requiresPlan: 'pro' },
-  { label: 'Colaboradores', to: '/app/colaboradores', icon: UserRound, requiresPlan: 'duo' },
+  { label: 'Finance IA', to: '/app/finance-ia', icon: Sparkles, requiresFeature: 'ai_insights', badge: 'PRO' },
+  { label: 'Colaboradores', to: '/app/colaboradores', icon: UserRound, requiresFeature: 'duo_view', badge: 'DUO' },
 ];
 
 const OTHER_ITEMS: NavItem[] = [
@@ -45,14 +48,14 @@ const OTHER_ITEMS: NavItem[] = [
   { label: 'Ajuda', to: '/app/ajuda', icon: CircleHelp },
 ];
 
-function renderItems(items: NavItem[], plan: Plan | undefined) {
-  return items.map(({ label, to, icon: Icon, requiresPlan }) => {
-    const locked = (requiresPlan === 'pro' && !hasProAccess(plan)) || (requiresPlan === 'duo' && !hasDuoAccess(plan));
+function renderItems(items: NavItem[], plan: Plan | undefined, plans: PlanRow[] | undefined) {
+  return items.map(({ label, to, icon: Icon, requiresFeature, badge }) => {
+    const locked = Boolean(requiresFeature) && !hasFeature(plans, plan, requiresFeature!);
     return (
       <NavLink key={label} to={to} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${locked ? 'locked' : ''}`}>
         <Icon />
         <span>{label}</span>
-        {requiresPlan && (locked ? <Lock className="lock-tag" size={13} /> : <em className="pro-tag">{requiresPlan.toUpperCase()}</em>)}
+        {requiresFeature && (locked ? <Lock className="lock-tag" size={13} /> : <em className="pro-tag">{badge}</em>)}
       </NavLink>
     );
   });
@@ -62,6 +65,7 @@ export function Sidebar() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { data: profile } = useProfile();
+  const { data: plans } = usePlans();
 
   async function handleSignOut() {
     await signOut();
@@ -75,7 +79,7 @@ export function Sidebar() {
     .slice(0, 2)
     .join('')
     .toUpperCase();
-  const planLabel = profile ? PLAN_LABELS[profile.plan] : 'Carregando plano...';
+  const planLabel = planDisplayLabel(profile);
 
   return (
     <aside className="sidebar">
@@ -90,10 +94,10 @@ export function Sidebar() {
       </div>
       <nav aria-label="Navegação principal">
         <p className="nav-label">MENU</p>
-        <div className="nav-list">{renderItems(MENU_ITEMS, profile?.plan)}</div>
+        <div className="nav-list">{renderItems(MENU_ITEMS, profile?.plan, plans)}</div>
         <p className="nav-label nav-label-other">OUTROS</p>
         <div className="nav-list">
-          {renderItems(OTHER_ITEMS, profile?.plan)}
+          {renderItems(OTHER_ITEMS, profile?.plan, plans)}
           <button type="button" className="nav-item" onClick={handleSignOut}>
             <LogOut />
             <span>Sair</span>
