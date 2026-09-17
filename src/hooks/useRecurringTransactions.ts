@@ -48,7 +48,11 @@ export function useCreateRecurringTransaction() {
       return data;
     },
     onSuccess: () => {
+      // Cadastrar uma recorrência dispara um trigger no banco que já gera o lançamento do mês
+      // corrente (ver migration 007) — se ele já venceu, o saldo muda na hora.
       queryClient.invalidateQueries({ queryKey: ['recurring_transactions', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['transactions', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['accounts', user?.id] });
     },
   });
 }

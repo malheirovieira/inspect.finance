@@ -1,13 +1,23 @@
 import { useState, type FormEvent } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { Lock, Mail, User } from 'lucide-react';
+import { Check, Mail, User, X } from 'lucide-react';
 import { z } from 'zod';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PasswordInput } from '@/components/PasswordInput';
+import { trackEvent } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
 import type { Plan } from '@/types/database';
+
+const PASSWORD_RULES = [
+  { label: 'Mínimo de 8 caracteres', test: (v: string) => v.length >= 8 },
+  { label: '1 letra maiúscula', test: (v: string) => /[A-Z]/.test(v) },
+  { label: '1 letra minúscula', test: (v: string) => /[a-z]/.test(v) },
+  { label: '1 número', test: (v: string) => /[0-9]/.test(v) },
+  { label: '1 caractere especial (ex: ! @ # $)', test: (v: string) => /[^A-Za-z0-9]/.test(v) },
+];
 
 const registerSchema = z
   .object({
@@ -17,7 +27,9 @@ const registerSchema = z
       .string()
       .min(8, 'Mínimo de 8 caracteres')
       .regex(/[A-Z]/, 'Precisa de ao menos 1 letra maiúscula')
-      .regex(/[0-9]/, 'Precisa de ao menos 1 número'),
+      .regex(/[a-z]/, 'Precisa de ao menos 1 letra minúscula')
+      .regex(/[0-9]/, 'Precisa de ao menos 1 número')
+      .regex(/[^A-Za-z0-9]/, 'Precisa de ao menos 1 caractere especial'),
     confirmPassword: z.string(),
     acceptedTerms: z.literal(true, { errorMap: () => ({ message: 'Você precisa aceitar os Termos de Uso e a Política de Privacidade' }) }),
   })
@@ -78,6 +90,7 @@ export function RegisterPage() {
     setSubmitting(true);
     try {
       const { hasSession } = await signUp({ email, password, fullName, plan });
+      trackEvent('signup_completed', { plan, billing_cycle: billingCycle, needs_email_confirmation: !hasSession });
       if (hasSession) {
         // Ativação (trial grátis ou pagamento com cartão/PIX) acontece toda em /completar-pagamento
         // — a confirmação de e-mail é só um lembrete não-bloqueante (EmailVerificationBanner),
@@ -98,7 +111,7 @@ export function RegisterPage() {
 
   if (needsEmailConfirmation) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-4" style={{ background: '#e0e0e0' }}>
+      <div className="auth-page-bg flex min-h-screen items-center justify-center px-4">
         <div className="glass-card w-full max-w-md p-10 text-center">
           <h1 className="text-lg font-semibold">Confirme seu e-mail</h1>
           <p className="mt-3 text-sm text-muted-foreground">
@@ -114,10 +127,10 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 py-12" style={{ background: '#e0e0e0' }}>
+    <div className="auth-page-bg flex min-h-screen items-center justify-center px-4 py-12">
       <div className="glass-card w-full max-w-md p-10">
         <div className="space-y-1 text-center">
-          <Link to="/" className="mb-2 inline-block font-heading text-2xl font-semibold">
+          <Link to="/" style={{ fontFamily: "'Playfair Display', Georgia, serif" }} className="mb-2 inline-block text-2xl font-semibold">
             inspect.finance
           </Link>
           <h1 className="text-lg font-semibold">Crie sua conta</h1>
@@ -159,35 +172,41 @@ export function RegisterPage() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Senha</Label>
-            <div className="icon-input-wrapper">
-              <Lock />
-              <Input
-                id="password"
-                type="password"
-                autoComplete="new-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Mín. 8 caracteres, 1 maiúscula, 1 número"
-                className="icon-input focus-visible:ring-0 focus-visible:ring-offset-0"
-              />
-            </div>
+            <PasswordInput
+              id="password"
+              autoComplete="new-password"
+              required
+              value={password}
+              onChange={setPassword}
+              placeholder="Crie uma senha"
+            />
+            {password.length > 0 && (
+              <ul className="grid grid-cols-1 gap-1 pt-1 sm:grid-cols-2">
+                {PASSWORD_RULES.map((rule) => {
+                  const met = rule.test(password);
+                  return (
+                    <li
+                      key={rule.label}
+                      className={cn('flex items-center gap-1.5 text-xs', met ? 'text-[#1e2a0e]' : 'text-muted-foreground')}
+                    >
+                      {met ? <Check size={12} className="shrink-0" /> : <X size={12} className="shrink-0 opacity-50" />}
+                      {rule.label}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="confirmPassword">Confirmar senha</Label>
-            <div className="icon-input-wrapper">
-              <Lock />
-              <Input
-                id="confirmPassword"
-                type="password"
-                autoComplete="new-password"
-                required
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Repita a senha"
-                className="icon-input focus-visible:ring-0 focus-visible:ring-offset-0"
-              />
-            </div>
+            <PasswordInput
+              id="confirmPassword"
+              autoComplete="new-password"
+              required
+              value={confirmPassword}
+              onChange={setConfirmPassword}
+              placeholder="Repita a senha"
+            />
           </div>
 
           <div className="space-y-2">
@@ -251,13 +270,13 @@ export function RegisterPage() {
             />
             <span>
               Li e aceito os{' '}
-              <a href="#" className="font-medium text-[#1e2a0e] hover:underline">
+              <Link to="/termos" target="_blank" className="font-medium text-[#1e2a0e] hover:underline">
                 Termos de Uso
-              </a>{' '}
+              </Link>{' '}
               e a{' '}
-              <a href="#" className="font-medium text-[#1e2a0e] hover:underline">
+              <Link to="/privacidade" target="_blank" className="font-medium text-[#1e2a0e] hover:underline">
                 Política de Privacidade
-              </a>
+              </Link>
             </span>
           </label>
 

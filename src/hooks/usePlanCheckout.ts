@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useCreateCheckout, useStartFreeTrial } from '@/hooks/useSubscription';
+import { trackEvent } from '@/lib/analytics';
 import type { BillingCycle, Plan } from '@/types/database';
 
 /** Lógica compartilhada de escolha de plano + forma de pagamento (cartão e PIX redirecionam pro checkout hospedado da Asaas, trial libera na hora). */
@@ -18,6 +19,7 @@ export function usePlanCheckout(onTrialStarted?: () => void, initialBillingCycle
     setPendingPlan(plan);
     setPendingMethod('CREDIT_CARD');
     try {
+      trackEvent('checkout_started', { plan, billing_cycle: billingCycle, method: 'CREDIT_CARD' });
       const result = await createCheckout.mutateAsync({ plan, billingCycle, method: 'CREDIT_CARD' });
       window.location.href = result.link;
     } catch (err) {
@@ -32,6 +34,7 @@ export function usePlanCheckout(onTrialStarted?: () => void, initialBillingCycle
     setPendingPlan(plan);
     setPendingMethod('PIX');
     try {
+      trackEvent('checkout_started', { plan, billing_cycle: billingCycle, method: 'PIX' });
       const result = await createCheckout.mutateAsync({ plan, billingCycle, method: 'PIX' });
       window.location.href = result.link;
     } catch (err) {
@@ -46,6 +49,7 @@ export function usePlanCheckout(onTrialStarted?: () => void, initialBillingCycle
     setPendingPlan('basic');
     try {
       await startFreeTrial.mutateAsync();
+      trackEvent('trial_started', { plan: 'basic' });
       setFreeTrialStarted(true);
       onTrialStarted?.();
     } catch (err) {

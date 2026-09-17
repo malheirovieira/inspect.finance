@@ -9,8 +9,10 @@ export function useAccounts() {
     queryKey: ['accounts', user?.id],
     queryFn: async (): Promise<Account[]> => {
       if (!user) return [];
+      // Lê da view `accounts_with_balance`: saldo é calculado (saldo inicial + transações já
+      // realizadas até hoje), nunca um valor fixo desatualizado — ver migration 008.
       const { data, error } = await supabase
-        .from('accounts')
+        .from('accounts_with_balance')
         .select('*')
         .eq('user_id', user.id)
         .is('deleted_at', null)
@@ -35,11 +37,13 @@ export function useCreateAccount() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: CreateAccountInput) => {
+    mutationFn: async ({ balance, ...input }: CreateAccountInput) => {
       if (!user) throw new Error('Usuário não autenticado');
+      // `balance` aqui é o saldo de abertura informado pelo usuário — gravado como
+      // `initial_balance`; o saldo exibido depois é sempre calculado (ver useAccounts).
       const { data, error } = await supabase
         .from('accounts')
-        .insert({ user_id: user.id, ...input })
+        .insert({ user_id: user.id, initial_balance: balance, ...input })
         .select()
         .single();
       if (error) throw error;

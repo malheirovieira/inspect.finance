@@ -1,11 +1,10 @@
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { Mail } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export function ForgotPasswordPage() {
   const { resetPassword } = useAuth();
@@ -29,31 +28,28 @@ export function ForgotPasswordPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-cream px-4">
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="w-full max-w-md"
-      >
-        <Card className="border-charcoal/10">
-          <CardHeader className="space-y-1 text-center">
-            <Link to="/" className="mb-2 inline-block font-heading text-2xl font-semibold text-charcoal">
-              inspect.finance
-            </Link>
-            <CardTitle>Recuperar senha</CardTitle>
-            <CardDescription>Enviaremos um link de recuperação para seu e-mail</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {sent ? (
-              <p className="text-center text-sm text-muted-foreground">
-                Se existir uma conta com o e-mail <strong>{email}</strong>, você receberá um link de recuperação em
-                instantes. O link expira em 1 hora.
-              </p>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">E-mail</Label>
+    <div className="auth-page-bg flex min-h-screen items-center justify-center px-4">
+      <div className="glass-card w-full max-w-md p-10">
+        <div className="space-y-1 text-center">
+          <Link to="/" style={{ fontFamily: "'Playfair Display', Georgia, serif" }} className="mb-2 inline-block text-2xl font-semibold">
+            inspect.finance
+          </Link>
+          <h1 className="text-lg font-semibold">Recuperar senha</h1>
+          <p className="text-sm text-muted-foreground">Enviaremos um link de recuperação para seu e-mail</p>
+        </div>
+
+        <div className="mt-6 space-y-4">
+          {sent ? (
+            <p className="text-center text-sm text-muted-foreground">
+              Se existir uma conta com o e-mail <strong>{email}</strong>, você receberá um link de recuperação em
+              instantes. O link expira em 1 hora.
+            </p>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">E-mail</Label>
+                <div className="icon-input-wrapper">
+                  <Mail />
                   <Input
                     id="email"
                     type="email"
@@ -62,26 +58,27 @@ export function ForgotPasswordPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="voce@email.com"
+                    className="icon-input focus-visible:ring-0 focus-visible:ring-offset-0"
                   />
                 </div>
+              </div>
 
-                {error && <p className="text-sm text-destructive">{error}</p>}
+              {error && <p className="text-sm text-destructive">{error}</p>}
 
-                <Button type="submit" className="w-full" disabled={submitting}>
-                  {submitting ? 'Enviando...' : 'Enviar link de recuperação'}
-                </Button>
-              </form>
-            )}
+              <Button type="submit" className="w-full bg-[var(--color-accent)] text-[#0A0A0A] hover:bg-[#D9FF33]" disabled={submitting}>
+                {submitting ? 'Enviando...' : 'Enviar link de recuperação'}
+              </Button>
+            </form>
+          )}
 
-            <p className="text-center text-sm text-muted-foreground">
-              Lembrou a senha?{' '}
-              <Link to="/login" className="font-medium text-primary hover:underline">
-                Voltar ao login
-              </Link>
-            </p>
-          </CardContent>
-        </Card>
-      </motion.div>
+          <p className="text-center text-sm text-muted-foreground">
+            Lembrou a senha?{' '}
+            <Link to="/login" className="font-medium text-[#1e2a0e] hover:underline">
+              Voltar ao login
+            </Link>
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

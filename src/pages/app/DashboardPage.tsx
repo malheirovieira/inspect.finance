@@ -238,22 +238,26 @@ export function DashboardPage() {
   const { data: goals = [] } = useGoals();
   const { data: transactions = [] } = useTransactions();
   const { data: recurringExpenses = [] } = useRecurringTransactions('expense');
+  const { data: recurringIncomes = [] } = useRecurringTransactions('income');
   const recentTransactions = transactions.slice(0, 3);
   const expenseTransactions = useMemo(() => transactions.filter((tx) => tx.type === 'expense'), [transactions]);
   const cardAccounts = accounts.filter((account) => account.type === 'credit_card');
 
   const totalBalance = accounts.reduce((total, account) => total + account.balance, 0);
 
-  const upcomingPayments = useMemo(() => {
+  function sortByUpcomingDay<T extends { day_of_month: number | null }>(items: T[]): T[] {
     const today = currentDayOfMonthBrasilia();
-    return [...recurringExpenses]
+    return [...items]
       .sort((a, b) => {
         const diffA = ((a.day_of_month ?? 1) - today + 31) % 31;
         const diffB = ((b.day_of_month ?? 1) - today + 31) % 31;
         return diffA - diffB;
       })
       .slice(0, 3);
-  }, [recurringExpenses]);
+  }
+
+  const upcomingPayments = useMemo(() => sortByUpcomingDay(recurringExpenses), [recurringExpenses]);
+  const upcomingReceivables = useMemo(() => sortByUpcomingDay(recurringIncomes), [recurringIncomes]);
 
   return (
     <div className="dashboard-home">
@@ -396,6 +400,24 @@ export function DashboardPage() {
                 </div>
               </section>
             </div>
+
+            <section className="scheduled" style={{ marginTop: 28 }}>
+              <div className="section-heading">
+                <h2>Previsão de recebimentos</h2>
+                <button onClick={() => navigate('/app/receitas')}>Ver todos</button>
+              </div>
+              {upcomingReceivables.length === 0 && <p className="empty-state">Nenhuma receita recorrente cadastrada ainda.</p>}
+              {upcomingReceivables.map((receivable) => (
+                <div className="payment" key={receivable.id}>
+                  <span className="payment-avatar">{receivable.description.slice(0, 2).toUpperCase()}</span>
+                  <div>
+                    <strong>{receivable.description}</strong>
+                    <small>Todo dia {receivable.day_of_month}</small>
+                  </div>
+                  <b>{formatCurrency(receivable.amount)}</b>
+                </div>
+              ))}
+            </section>
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { FileText, Trash2 } from 'lucide-react';
 import { SectionPageTitle } from '@/components/dashboard/SectionPageTitle';
+import { CurrencyInput } from '@/components/CurrencyInput';
 import { useAccounts } from '@/hooks/useAccounts';
 import { useCreateTransaction, useDeleteTransaction, useTransactions } from '@/hooks/useTransactions';
 import { useCreateRecurringTransaction, useDeleteRecurringTransaction, useRecurringTransactions } from '@/hooks/useRecurringTransactions';
@@ -16,7 +17,10 @@ function formatCurrency(value: number) {
 export function DespesasPage() {
   const { data: accounts = [] } = useAccounts();
   const { data: recurringExpenses = [] } = useRecurringTransactions('expense');
-  const { data: eventualExpenses = [] } = useTransactions('expense');
+  const { data: allExpenses = [] } = useTransactions('expense');
+  // Lançamentos gerados automaticamente a partir de uma recorrência já aparecem via
+  // `recurringExpenses` (o modelo) — sem este filtro, apareceriam duas vezes na lista.
+  const eventualExpenses = allExpenses.filter((expense) => !expense.recurring_transaction_id);
   const createRecurring = useCreateRecurringTransaction();
   const createTransaction = useCreateTransaction();
   const deleteRecurring = useDeleteRecurringTransaction();
@@ -110,7 +114,7 @@ export function DespesasPage() {
           </div>
           <div className="field">
             <label>Valor</label>
-            <input value={value} onChange={(e) => setValue(e.target.value)} placeholder="0,00" />
+            <CurrencyInput value={value} onChange={setValue} />
           </div>
           <div className="field">
             <label>Data de vencimento</label>

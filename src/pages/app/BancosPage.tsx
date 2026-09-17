@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Landmark, Trash2, X } from 'lucide-react';
 import { SectionPageTitle } from '@/components/dashboard/SectionPageTitle';
+import { CurrencyInput } from '@/components/CurrencyInput';
 import { useAccounts, useCreateAccount, useDeleteAccount } from '@/hooks/useAccounts';
 import { ACCOUNT_TYPE_OPTIONS, accountTypeLabel } from '@/lib/accountTypes';
 import type { AccountType } from '@/types/database';
@@ -75,12 +76,12 @@ export function BancosPage() {
           {isCard ? (
             <div className="field">
               <label>Limite do cartão</label>
-              <input value={creditLimit} onChange={(event) => setCreditLimit(event.target.value)} placeholder="0,00" inputMode="decimal" />
+              <CurrencyInput value={creditLimit} onChange={setCreditLimit} />
             </div>
           ) : (
             <div className="field">
               <label>Saldo inicial</label>
-              <input value={balance} onChange={(event) => setBalance(event.target.value)} placeholder="0,00" inputMode="decimal" />
+              <CurrencyInput value={balance} onChange={setBalance} />
             </div>
           )}
           <button className="primary-button" onClick={addBank} disabled={createAccount.isPending}>

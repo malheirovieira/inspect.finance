@@ -1,6 +1,7 @@
 import { useState, type CSSProperties } from 'react';
 import { Plus, X } from 'lucide-react';
 import { SectionPageTitle } from '@/components/dashboard/SectionPageTitle';
+import { CurrencyInput } from '@/components/CurrencyInput';
 import { useAddGoalContribution, useCreateGoal, useGoalContributions, useGoals } from '@/hooks/useGoals';
 import { formatDateTime } from '@/lib/datetime';
 
@@ -72,7 +73,7 @@ export function MetasPage() {
           </div>
           <div className="field">
             <label>Valor desejado</label>
-            <input value={targetAmount} onChange={(e) => setTargetAmount(e.target.value)} placeholder="R$ 0,00" inputMode="decimal" />
+            <CurrencyInput value={targetAmount} onChange={setTargetAmount} />
           </div>
           <button className="primary-button" onClick={addGoal} disabled={createGoal.isPending}>
             {createGoal.isPending ? 'Criando...' : 'Criar meta'}
@@ -130,13 +131,7 @@ export function MetasPage() {
               {historyGoal === goal.id && <GoalHistory goalId={goal.id} />}
               {depositGoal === goal.id && (
                 <div className="deposit-form">
-                  <input
-                    autoFocus
-                    value={deposit}
-                    onChange={(e) => setDeposit(e.target.value)}
-                    placeholder="Valor do depósito"
-                    inputMode="decimal"
-                  />
+                  <CurrencyInput autoFocus value={deposit} onChange={setDeposit} placeholder="Valor do depósito" />
                   <button onClick={() => addDeposit(goal.id, goal.current_amount, goal.target_amount)} disabled={addContribution.isPending}>
                     {addContribution.isPending ? 'Salvando...' : 'Depositar'}
                   </button>

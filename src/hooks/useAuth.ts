@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import { identifyUser, resetAnalyticsIdentity } from '@/lib/analytics';
 import type { Plan } from '@/types/database';
 
 interface AuthState {
@@ -30,8 +31,13 @@ export function useAuth() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setState({ session, user: session?.user ?? null, loading: false });
+      if (event === 'SIGNED_OUT') {
+        resetAnalyticsIdentity();
+      } else if (session?.user) {
+        identifyUser(session.user.id, { email: session.user.email });
+      }
     });
 
     return () => subscription.unsubscribe();

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Search, Settings, WalletCards, X } from 'lucide-react';
 import { SectionPageTitle } from '@/components/dashboard/SectionPageTitle';
+import { CurrencyInput } from '@/components/CurrencyInput';
 import { useAccounts } from '@/hooks/useAccounts';
 import { useCreateTransaction, useTransactions } from '@/hooks/useTransactions';
 import { useCreateRecurringTransaction, useRecurringTransactions, useUpdateRecurringTransaction } from '@/hooks/useRecurringTransactions';
@@ -15,7 +16,10 @@ function formatCurrency(value: number) {
 export function ReceitasPage() {
   const { data: accounts = [] } = useAccounts();
   const { data: recurringIncomes = [] } = useRecurringTransactions('income');
-  const { data: eventualIncomes = [] } = useTransactions('income');
+  const { data: allIncomes = [] } = useTransactions('income');
+  // Lançamentos gerados automaticamente a partir de uma recorrência já aparecem via
+  // `recurringIncomes` (o modelo) — sem este filtro, apareceriam duas vezes na lista.
+  const eventualIncomes = allIncomes.filter((income) => !income.recurring_transaction_id);
   const createRecurring = useCreateRecurringTransaction();
   const updateRecurring = useUpdateRecurringTransaction();
   const createTransaction = useCreateTransaction();
@@ -64,7 +68,7 @@ export function ReceitasPage() {
   function startSalaryEdit(id: string, description: string, amount: number) {
     setEditingId(id);
     setSalaryName(description);
-    setSalaryValue(String(amount));
+    setSalaryValue(amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
   }
 
   async function saveSalaryEdit() {
@@ -93,7 +97,7 @@ export function ReceitasPage() {
           </div>
           <div className="field">
             <label>Valor líquido</label>
-            <input value={salaryValue} onChange={(e) => setSalaryValue(e.target.value)} placeholder="0,00" inputMode="decimal" />
+            <CurrencyInput value={salaryValue} onChange={setSalaryValue} />
           </div>
           <div className="field">
             <label>Data de recebimento</label>
@@ -193,7 +197,7 @@ export function ReceitasPage() {
               </div>
               <div className="field">
                 <label>Valor</label>
-                <input value={salaryValue} onChange={(e) => setSalaryValue(e.target.value)} />
+                <CurrencyInput value={salaryValue} onChange={setSalaryValue} />
               </div>
               <button className="primary-button" onClick={saveSalaryEdit}>
                 Salvar edição

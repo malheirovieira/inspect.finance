@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ArrowRight, Check, FileText, Shield, Target, TrendingUp, Users, Zap } from 'lucide-react';
@@ -975,16 +975,16 @@ function Footer() {
           <h4 className="mb-3 text-sm font-semibold text-white">Empresa</h4>
           <ul className="space-y-2 text-[13px] text-white/55">
             <li><a href="#" className="transition-colors hover:text-white">Sobre</a></li>
-            <li><a href="#" className="transition-colors hover:text-white">Contato</a></li>
-            <li><a href="#" className="transition-colors hover:text-white">LGPD</a></li>
+            <li><a href="mailto:contato@inspect.finance" className="transition-colors hover:text-white">Contato</a></li>
+            <li><Link to="/privacidade" className="transition-colors hover:text-white">LGPD</Link></li>
           </ul>
         </div>
 
         <div>
           <h4 className="mb-3 text-sm font-semibold text-white">Legal</h4>
           <ul className="space-y-2 text-[13px] text-white/55">
-            <li><a href="#" className="transition-colors hover:text-white">Termos</a></li>
-            <li><a href="#" className="transition-colors hover:text-white">Privacidade</a></li>
+            <li><Link to="/termos" className="transition-colors hover:text-white">Termos</Link></li>
+            <li><Link to="/privacidade" className="transition-colors hover:text-white">Privacidade</Link></li>
           </ul>
         </div>
       </div>
