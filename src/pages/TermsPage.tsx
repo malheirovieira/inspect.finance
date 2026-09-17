@@ -39,7 +39,7 @@ export function TermsPage() {
         <Section title="1. Aceitação dos termos">
           <p>
             Ao criar uma conta ou usar o inspect.finance, você concorda com estes Termos de Uso e com nossa{' '}
-            <Link to="/privacidade" className="font-medium text-[#1e2a0e] hover:underline">
+            <Link to="/privacidade" className="font-medium text-[#05132a] hover:underline">
               Política de Privacidade
             </Link>
             . Se você não concordar, não utilize a plataforma.
@@ -121,7 +121,7 @@ export function TermsPage() {
           <p>
             Você pode excluir sua conta a qualquer momento em Parametrizações → Excluir conta. Isso remove
             permanentemente seus dados financeiros e pessoais, conforme descrito na nossa{' '}
-            <Link to="/privacidade" className="font-medium text-[#1e2a0e] hover:underline">
+            <Link to="/privacidade" className="font-medium text-[#05132a] hover:underline">
               Política de Privacidade
             </Link>
             . Também podemos suspender ou encerrar contas que violem estes termos.
@@ -143,7 +143,7 @@ export function TermsPage() {
         </Section>
 
         <p className="mt-14 text-center text-sm text-[var(--color-text-secondary)]">
-          <Link to="/" className="font-medium text-[#1e2a0e] hover:underline">
+          <Link to="/" className="font-medium text-[#05132a] hover:underline">
             Voltar para o início
           </Link>
         </p>

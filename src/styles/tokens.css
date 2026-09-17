@@ -9,8 +9,8 @@
 
 :root {
   /* ---- Paleta bruta (referência de marca — usada em TODA a aplicação) ---- */
-  --neon: 72 100% 50%;       /* #ccff00 — verde neon, cor primária de marca */
-  --moss: 90 48% 11%;        /* #1e2a0e — verde musgo, superfícies escuras */
+  --neon: 215 100% 66%;      /* #549cff — azul neon, cor primária de marca */
+  --moss: 217 79% 9%;        /* #05132a — azul-marinho, superfícies escuras */
   --black: 0 0% 4%;          /* #0a0a0a — preto, texto principal */
   --gray: 0 0% 88%;          /* #e0e0e0 — cinza, cards e superfícies neutras */
   --white: 0 0% 100%;        /* #ffffff — branco, fundo principal */
@@ -61,12 +61,12 @@
   --color-bg-dark: #0a0a0a;
   --color-bg-white: #e0e0e0;
   --color-bg-light: #faf0e8;
-  --color-bg-green-dark: #1e2a0e;
+  --color-bg-green-dark: #05132a;
   --color-text-primary: #1a1a1a;
   --color-text-secondary: #6b6b6b;
   --color-text-faded: #cccccc;
   --color-text-white: #ffffff;
-  --color-accent: #ccff00;
+  --color-accent: #549cff;
   --color-label-green: #5a7a3a;
   --color-border: #e5e5e5;
 }

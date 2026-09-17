@@ -65,7 +65,7 @@ export function ForgotPasswordPage() {
 
               {error && <p className="text-sm text-destructive">{error}</p>}
 
-              <Button type="submit" className="w-full bg-[var(--color-accent)] text-[#0A0A0A] hover:bg-[#D9FF33]" disabled={submitting}>
+              <Button type="submit" className="w-full bg-[var(--color-accent)] text-[#0A0A0A] hover:bg-[#76B0FF]" disabled={submitting}>
                 {submitting ? 'Enviando...' : 'Enviar link de recuperação'}
               </Button>
             </form>
@@ -73,7 +73,7 @@ export function ForgotPasswordPage() {
 
           <p className="text-center text-sm text-muted-foreground">
             Lembrou a senha?{' '}
-            <Link to="/login" className="font-medium text-[#1e2a0e] hover:underline">
+            <Link to="/login" className="font-medium text-[#05132a] hover:underline">
               Voltar ao login
             </Link>
           </p>

@@ -278,7 +278,7 @@ body::before {
 }
 
 /* LoginPage/RegisterPage — input com ícone à esquerda (from Uiverse.io by
-   ozgeozkaraa01), cor de marca (#1e2a0e) no lugar do roxo original. */
+   ozgeozkaraa01), cor de marca (#05132a) no lugar do roxo original. */
 .icon-input {
   padding-left: 3rem !important;
   padding-right: 2.75rem !important;
@@ -292,7 +292,7 @@ body::before {
 .icon-input:hover,
 .icon-input:focus-visible {
   outline: none !important;
-  border-color: #1e2a0e !important;
+  border-color: #05132a !important;
   background-color: #e0e0e0 !important;
 }
 
@@ -329,7 +329,7 @@ body::before {
 }
 
 .password-toggle-btn:hover {
-  color: #1e2a0e;
+  color: #05132a;
 }
 
 /* LoginPage — botão "Entrar com Google" (from Uiverse.io by Yaya12085). */

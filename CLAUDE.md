@@ -229,8 +229,8 @@ Todo domingo, Edge Function cron gera um resumo financeiro para usuários Pro at
 ## Design System — Referências
 
 **Paleta unificada** (mesmas cores em landing page, login E interior do app):
-- Verde neon `#ccff00` — cor primária (CTAs, botões, destaques). Hover: `#D9FF33`
-- Verde musgo `#1e2a0e` — superfícies escuras (sidebar, headers escuros, seções institucionais)
+- Azul neon `#549cff` — cor primária (CTAs, botões, destaques). Hover: `#76B0FF`
+- Azul-marinho `#05132a` — superfícies escuras (sidebar, headers escuros, seções institucionais)
 - Verde label `#5a7a3a` — textos/ícones secundários verdes (checkmarks, labels)
 - Preto `#0a0a0a` / `#1a1a1a` — texto principal, fundos escuros
 - Cinza `#e0e0e0` — superfícies neutras, cards, inputs

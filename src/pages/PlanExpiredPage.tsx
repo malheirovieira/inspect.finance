@@ -41,11 +41,11 @@ export function PlanExpiredPage() {
         <button
           type="button"
           onClick={() => navigate('/completar-pagamento')}
-          className="mt-6 inline-block w-full rounded-md bg-[var(--color-accent)] px-6 py-3 text-sm font-medium text-[#0A0A0A] hover:bg-[#D9FF33]"
+          className="mt-6 inline-block w-full rounded-md bg-[var(--color-accent)] px-6 py-3 text-sm font-medium text-[#0A0A0A] hover:bg-[#76B0FF]"
         >
           Ver planos
         </button>
-        <button type="button" onClick={handleSignOut} className="mt-4 block w-full text-sm font-medium text-[#1e2a0e] hover:underline">
+        <button type="button" onClick={handleSignOut} className="mt-4 block w-full text-sm font-medium text-[#05132a] hover:underline">
           Entrar com outra conta
         </button>
       </div>

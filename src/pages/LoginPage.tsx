@@ -67,7 +67,7 @@ export function LoginPage() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Senha</Label>
-              <Link to="/forgot-password" className="text-xs text-[#1e2a0e] hover:underline">
+              <Link to="/forgot-password" className="text-xs text-[#05132a] hover:underline">
                 Esqueceu a senha?
               </Link>
             </div>
@@ -84,14 +84,14 @@ export function LoginPage() {
 
           {error && <p className="text-sm text-destructive">{error}</p>}
 
-          <Button type="submit" className="w-full bg-[var(--color-accent)] text-[#0A0A0A] hover:bg-[#D9FF33]" disabled={submitting}>
+          <Button type="submit" className="w-full bg-[var(--color-accent)] text-[#0A0A0A] hover:bg-[#76B0FF]" disabled={submitting}>
             {submitting ? 'Entrando...' : 'Entrar'}
           </Button>
         </form>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Não tem conta?{' '}
-          <Link to="/cadastro" className="font-medium text-[#1e2a0e] hover:underline">
+          <Link to="/cadastro" className="font-medium text-[#05132a] hover:underline">
             Cadastre-se
           </Link>
         </p>

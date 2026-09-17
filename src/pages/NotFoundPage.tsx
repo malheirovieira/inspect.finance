@@ -19,7 +19,7 @@ export function NotFoundPage() {
         </p>
         <Link
           to="/"
-          className="group mt-8 inline-flex items-center gap-2 rounded-full bg-[var(--color-accent)] px-6 py-3 text-sm font-semibold text-[#0A0A0A] transition-colors hover:bg-[#D9FF33]"
+          className="group mt-8 inline-flex items-center gap-2 rounded-full bg-[var(--color-accent)] px-6 py-3 text-sm font-semibold text-[#0A0A0A] transition-colors hover:bg-[#76B0FF]"
         >
           Voltar para o início
           <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />

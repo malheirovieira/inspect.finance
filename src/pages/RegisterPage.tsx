@@ -118,7 +118,7 @@ export function RegisterPage() {
             Enviamos um link de confirmação para <strong>{email}</strong>. Depois de confirmar, é só entrar — a escolha de plano e
             pagamento continua de onde parou.
           </p>
-          <Link to="/login" className="mt-6 inline-block text-sm font-medium text-[#1e2a0e] hover:underline">
+          <Link to="/login" className="mt-6 inline-block text-sm font-medium text-[#05132a] hover:underline">
             Voltar para o login
           </Link>
         </div>
@@ -187,7 +187,7 @@ export function RegisterPage() {
                   return (
                     <li
                       key={rule.label}
-                      className={cn('flex items-center gap-1.5 text-xs', met ? 'text-[#1e2a0e]' : 'text-muted-foreground')}
+                      className={cn('flex items-center gap-1.5 text-xs', met ? 'text-[#05132a]' : 'text-muted-foreground')}
                     >
                       {met ? <Check size={12} className="shrink-0" /> : <X size={12} className="shrink-0 opacity-50" />}
                       {rule.label}
@@ -248,7 +248,7 @@ export function RegisterPage() {
                   className={cn(
                     'rounded-md border px-2 py-3 text-center text-sm transition-colors',
                     plan === p.id
-                      ? 'border-[#1e2a0e] bg-[#1e2a0e] text-white'
+                      ? 'border-[#05132a] bg-[#05132a] text-white'
                       : 'border-muted-foreground/20 text-muted-foreground hover:bg-black/5',
                   )}
                 >
@@ -270,11 +270,11 @@ export function RegisterPage() {
             />
             <span>
               Li e aceito os{' '}
-              <Link to="/termos" target="_blank" className="font-medium text-[#1e2a0e] hover:underline">
+              <Link to="/termos" target="_blank" className="font-medium text-[#05132a] hover:underline">
                 Termos de Uso
               </Link>{' '}
               e a{' '}
-              <Link to="/privacidade" target="_blank" className="font-medium text-[#1e2a0e] hover:underline">
+              <Link to="/privacidade" target="_blank" className="font-medium text-[#05132a] hover:underline">
                 Política de Privacidade
               </Link>
             </span>
@@ -285,7 +285,7 @@ export function RegisterPage() {
           <Button
             type="submit"
             disabled={submitting || !acceptedTerms}
-            className="w-full bg-[var(--color-accent)] text-[#0A0A0A] hover:bg-[#D9FF33]"
+            className="w-full bg-[var(--color-accent)] text-[#0A0A0A] hover:bg-[#76B0FF]"
           >
             {submitting ? 'Criando conta...' : plan === 'basic' ? 'Começar trial de 7 dias' : 'Assinar agora'}
           </Button>
@@ -293,7 +293,7 @@ export function RegisterPage() {
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Já tem conta?{' '}
-          <Link to="/login" className="font-medium text-[#1e2a0e] hover:underline">
+          <Link to="/login" className="font-medium text-[#05132a] hover:underline">
             Entrar
           </Link>
         </p>

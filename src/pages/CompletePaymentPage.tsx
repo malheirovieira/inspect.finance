@@ -112,7 +112,7 @@ export function CompletePaymentPage() {
                 key={plan}
                 className={cn(
                   'flex flex-col rounded-md border p-4',
-                  plan === preselectedPlan ? 'border-[#1e2a0e] ring-1 ring-[#1e2a0e]' : 'border-muted-foreground/20',
+                  plan === preselectedPlan ? 'border-[#05132a] ring-1 ring-[#05132a]' : 'border-muted-foreground/20',
                 )}
               >
                 <span className="text-xs font-medium text-muted-foreground">{billingCycle === 'monthly' ? PLAN_PRICES[plan] : ANNUAL_PRICES[plan]}</span>
@@ -120,7 +120,7 @@ export function CompletePaymentPage() {
                 <ul className="mt-3 flex-1 space-y-2">
                   {PLAN_FEATURES[plan].map((feature) => (
                     <li key={feature} className="flex items-start gap-2 text-xs text-muted-foreground">
-                      <Check size={14} className="mt-0.5 shrink-0 text-[#1e2a0e]" /> {feature}
+                      <Check size={14} className="mt-0.5 shrink-0 text-[#05132a]" /> {feature}
                     </li>
                   ))}
                 </ul>
@@ -130,7 +130,7 @@ export function CompletePaymentPage() {
                       type="button"
                       disabled={isPending}
                       onClick={startTrial}
-                      className="w-full rounded-md bg-[var(--color-accent)] px-3 py-2 text-xs font-medium text-[#0A0A0A] hover:bg-[#D9FF33] disabled:opacity-50"
+                      className="w-full rounded-md bg-[var(--color-accent)] px-3 py-2 text-xs font-medium text-[#0A0A0A] hover:bg-[#76B0FF] disabled:opacity-50"
                     >
                       {isPending && isTrialPending ? 'Ativando...' : 'Começar grátis por 7 dias'}
                     </button>
@@ -139,7 +139,7 @@ export function CompletePaymentPage() {
                     type="button"
                     disabled={isPending}
                     onClick={() => payWithCard(plan)}
-                    className="w-full rounded-md bg-[#1e2a0e] px-3 py-2 text-xs font-medium text-white hover:bg-[#2a3b14] disabled:opacity-50"
+                    className="w-full rounded-md bg-[#05132a] px-3 py-2 text-xs font-medium text-white hover:bg-[#2b364a] disabled:opacity-50"
                   >
                     {isPending && isCardPending ? 'Redirecionando...' : showFreeTrial ? 'Assinar já com cartão' : 'Pagar com cartão'}
                   </button>

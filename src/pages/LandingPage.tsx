@@ -326,7 +326,7 @@ function Header() {
           <button
             type="button"
             onClick={() => goToPlan()}
-            className="group inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[var(--color-accent)] px-5 py-2 text-sm font-medium text-[#0A0A0A] transition-all hover:scale-105 hover:bg-[#D9FF33]"
+            className="group inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[var(--color-accent)] px-5 py-2 text-sm font-medium text-[#0A0A0A] transition-all hover:scale-105 hover:bg-[#76B0FF]"
           >
             Começar grátis
             <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
@@ -544,7 +544,7 @@ function HeroSection() {
               onClick={() => goToPlan()}
               onMouseEnter={() => gsap.to(ctaRef.current, { scale: 1.05, duration: 0.2, ease: 'power2.out' })}
               onMouseLeave={() => gsap.to(ctaRef.current, { scale: 1, duration: 0.2, ease: 'power2.out' })}
-              className="group inline-flex items-center gap-2 rounded-full bg-[var(--color-accent)] px-6 py-3.5 text-sm font-semibold text-[#0A0A0A] transition-colors hover:bg-[#D9FF33]"
+              className="group inline-flex items-center gap-2 rounded-full bg-[var(--color-accent)] px-6 py-3.5 text-sm font-semibold text-[#0A0A0A] transition-colors hover:bg-[#76B0FF]"
             >
               Começar grátis
               <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
@@ -832,7 +832,7 @@ function PricingSection() {
                 className={cn(
                   'group mt-auto inline-flex w-full items-center justify-center gap-2 rounded-full py-3 text-sm font-semibold transition-all hover:scale-105',
                   plan.highlighted
-                    ? 'bg-[var(--color-accent)] text-[#0A0A0A] hover:bg-[#D9FF33]'
+                    ? 'bg-[var(--color-accent)] text-[#0A0A0A] hover:bg-[#76B0FF]'
                     : 'border border-[var(--color-bg-dark)] text-[var(--color-text-primary)] hover:bg-black/5',
                 )}
               >
@@ -928,7 +928,7 @@ function FinalCtaSection() {
           onClick={() => goToPlan()}
           onMouseEnter={() => gsap.to(ctaRef.current, { scale: 1.05, duration: 0.2, ease: 'power2.out' })}
           onMouseLeave={() => gsap.to(ctaRef.current, { scale: 1, duration: 0.2, ease: 'power2.out' })}
-          className="group mt-10 inline-flex items-center gap-2 rounded-full bg-[var(--color-accent)] px-10 py-4 text-sm font-semibold text-[#0A0A0A] transition-colors hover:bg-[#D9FF33]"
+          className="group mt-10 inline-flex items-center gap-2 rounded-full bg-[var(--color-accent)] px-10 py-4 text-sm font-semibold text-[#0A0A0A] transition-colors hover:bg-[#76B0FF]"
         >
           Começar 7 dias grátis
           <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
