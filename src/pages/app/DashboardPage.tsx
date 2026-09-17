@@ -403,7 +403,7 @@ export function DashboardPage() {
                       <strong>{tx.description}</strong>
                       <small>{formatDate(tx.date, { day: '2-digit', month: 'short' })}</small>
                     </div>
-                    <b>
+                    <b className={tx.type === 'income' ? 'income' : ''}>
                       {tx.type === 'income' ? '+ ' : '− '}
                       {formatCurrency(tx.amount)}
                     </b>
@@ -488,7 +488,10 @@ export function DashboardPage() {
               <div className="mini-avatar">{tx.description.slice(0, 2).toUpperCase()}</div>
               <div className="reimbursement-name">
                 <strong>{tx.description}</strong>
-                <small>{formatCurrency(tx.amount)}</small>
+                <small className={tx.type === 'income' ? 'income' : ''}>
+                  {tx.type === 'income' ? '+ ' : '− '}
+                  {formatCurrency(tx.amount)}
+                </small>
               </div>
               <button className="status">Concluída</button>
               <ChevronDown />

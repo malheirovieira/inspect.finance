@@ -21,6 +21,12 @@ npm-debug.log*
 !.vscode/extensions.json
 .idea/
 
+# Claude Code — settings.local.json é config pessoal (allowlist de permissões),
+# skills instalados via `npx skills add` são ferramenta local de quem está codando
+.claude/
+.agents/
+skills-lock.json
+
 # os
 .DS_Store
 Thumbs.db

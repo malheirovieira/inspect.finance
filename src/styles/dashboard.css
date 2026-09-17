@@ -178,15 +178,49 @@
 
 /* Destaque do saldo principal (6.1) — só tipografia/hierarquia, sem mudar cores/card. */
 .dashboard-total-balance .balance-label { color:#c6d1c3; font-size:10px; text-transform:uppercase; letter-spacing:.4px; }
-.dashboard-total-balance strong.balance-highlight { margin:8px 0 4px; font-size:28px; font-weight:300; letter-spacing:-.3px; }
+.dashboard-total-balance strong.balance-highlight { margin:8px 0 4px; font-size:clamp(2rem, 2.4vw, 2.5rem); font-weight:300; letter-spacing:-.3px; }
 
 /* Refinamento conservador do dashboard (6.2) — só espaçamento/tipografia. */
 .dashboard-home { gap:24px; }
 .lower-grid { gap:24px; }
 .dashboard-account-widget, .dashboard-goals-card, .expense-card, .dashboard-transactions-card,
 .list-card, .form-card, .goal-card, .report-panel, .premium-card { border-radius:17px; }
-.eyebrow { color:#111111; font-weight:600; font-size:.85rem; text-transform:uppercase; letter-spacing:.4px; }
-.account-main small, .payment small, .dashboard-transaction-cards small, .history-entry small { color:#888888; font-size:.8rem; }
+
+/* ============================================================================
+ * TIPOGRAFIA — escala única aplicada em todas as telas do app (não só
+ * dashboard): títulos de seção, títulos de card, saldo em destaque,
+ * descrições, labels de formulário e textos secundários. Regra geral: nunca
+ * preto puro (#111111 é o mínimo mais escuro), nunca cinza mais claro que
+ * #999999 em texto sobre fundo claro (cards com fundo escuro/colorido —
+ * carteira, saldo total — continuam usando texto claro, é contraste correto
+ * ali, não a mesma regra).
+ * ========================================================================== */
+.eyebrow { color:#555555; font-weight:600; font-size:1rem; text-transform:uppercase; letter-spacing:.08em; }
+.dashboard-card-title, .list-card-title h3, .goal-card h3, .report-panel h3,
+.calendar-header h2, .section-heading h2, .card-preview-section-title { font-size:1.1rem; font-weight:600; color:#111111; }
+.list-card-title p, .expense-header p, .empty-state, .collaborator-intro p { font-size:.85rem; color:#666666; font-weight:400; }
+.field label, .check-field { font-size:.8rem; font-weight:500; color:#444444; }
+.account-main small, .payment small, .dashboard-transaction-cards small, .history-entry small,
+.salary-row > span, .recurring-row > span, .account-row > small { color:#999999; font-size:.75rem; }
+
+/* Saldo em destaque — maior card do dashboard (ver hierarquia na seção de tamanhos abaixo). */
+.balance-highlight { color:#111111; }
+
+/* ============================================================================
+ * HIERARQUIA DE TAMANHO — o saldo total e o gráfico de despesas são os dados
+ * mais consultados, então ganham mais espaço/peso visual. Cards decorativos
+ * (carteira) e contadores simples (ex.: "X cadastrados") continuam no
+ * tamanho original — não há, hoje, um card só de número secundário que valha
+ * a pena encolher sem desequilibrar o grid ao lado dele.
+ * ========================================================================== */
+.dashboard-account-widget { padding:26px 30px; }
+.chart { height:240px; }
+
+/* Valores monetários — verde (mesmo tom já usado no app pra "positivo"/atual) pra receitas,
+   vermelho legível pra despesas, neutro pro saldo. Não mexe na cor accent do sistema. */
+.transaction-row b, .dashboard-transaction-cards b, .reimbursement-name small { color:#B91C1C; }
+.transaction-row b.income, .dashboard-transaction-cards b.income, .reimbursement-name small.income { color:var(--coral); }
+.chart-labels { color:#8b9198; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
