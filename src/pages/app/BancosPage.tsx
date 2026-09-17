@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ChevronDown, CreditCard, Landmark, Plus, Trash2 } from 'lucide-react';
 import { SectionPageTitle } from '@/components/dashboard/SectionPageTitle';
-import { CurrencyInput } from '@/components/CurrencyInput';
+import { CurrencyInput, parseCurrencyInput } from '@/components/CurrencyInput';
 import { CardPreview } from '@/components/CardPreview';
 import { Modal } from '@/components/Modal';
 import { useAccounts, useCreateAccount, useDeleteAccount } from '@/hooks/useAccounts';
@@ -66,7 +66,7 @@ export function BancosPage() {
       name: bankName,
       institution: bankInstitution,
       type: bankType,
-      balance: Number(bankBalance.replace(',', '.')) || 0,
+      balance: parseCurrencyInput(bankBalance),
     });
     setBankName('');
     setBankInstitution('');
@@ -82,7 +82,7 @@ export function BancosPage() {
       institution: cardInstitutionInput,
       type: 'credit_card',
       balance: 0,
-      credit_limit: Number(cardLimit.replace(',', '.')) || 0,
+      credit_limit: parseCurrencyInput(cardLimit),
       card_brand: cardBrand,
       billing_closing_day: cardClosingDay ? Number(cardClosingDay) : undefined,
       billing_due_day: cardDueDay ? Number(cardDueDay) : undefined,

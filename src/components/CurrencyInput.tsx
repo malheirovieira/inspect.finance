@@ -1,14 +1,20 @@
 import type { ChangeEvent } from 'react';
 
 interface CurrencyInputProps {
-  /** Valor decimal já formatado em pt-BR (ex.: "115,00") — mesmo formato usado no resto do
-   * app (`Number(value.replace(',', '.'))` continua funcionando sem mudanças). */
+  /** Valor decimal já formatado em pt-BR (ex.: "115,00" ou "1.500,00" acima de mil —
+   * use `parseCurrencyInput` para converter de volta em número, nunca `Number(value.replace(',', '.'))`,
+   * que quebra no separador de milhar). */
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
   id?: string;
   className?: string;
   autoFocus?: boolean;
+}
+
+/** Converte o valor formatado em pt-BR (ex.: "1.500,00") de volta em número (1500). */
+export function parseCurrencyInput(value: string): number {
+  return Number(value.replace(/\./g, '').replace(',', '.')) || 0;
 }
 
 function digitsToDecimalString(digits: string): string {

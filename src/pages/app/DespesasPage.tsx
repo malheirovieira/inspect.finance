@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { FileText, Trash2 } from 'lucide-react';
 import { SectionPageTitle } from '@/components/dashboard/SectionPageTitle';
-import { CurrencyInput } from '@/components/CurrencyInput';
+import { CurrencyInput, parseCurrencyInput } from '@/components/CurrencyInput';
 import { useAccounts } from '@/hooks/useAccounts';
 import { useCreateTransaction, useDeleteTransaction, useTransactions } from '@/hooks/useTransactions';
 import { useCreateRecurringTransaction, useDeleteRecurringTransaction, useRecurringTransactions } from '@/hooks/useRecurringTransactions';
@@ -39,7 +39,7 @@ export function DespesasPage() {
 
   async function addExpense() {
     if (!name.trim() || !value.trim() || !activeAccountId) return;
-    const amount = Number(value.replace(',', '.')) || 0;
+    const amount = parseCurrencyInput(value);
     const date = dueDate || todayISODate();
 
     if (expenseKind === 'recorrente') {

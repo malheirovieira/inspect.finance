@@ -1,7 +1,7 @@
 import { useState, type CSSProperties } from 'react';
 import { Plus, X } from 'lucide-react';
 import { SectionPageTitle } from '@/components/dashboard/SectionPageTitle';
-import { CurrencyInput } from '@/components/CurrencyInput';
+import { CurrencyInput, parseCurrencyInput } from '@/components/CurrencyInput';
 import { useAddGoalContribution, useCreateGoal, useGoalContributions, useGoals } from '@/hooks/useGoals';
 import { useRevealOnVisible } from '@/hooks/useRevealOnVisible';
 import { formatDateTime } from '@/lib/datetime';
@@ -46,14 +46,14 @@ export function MetasPage() {
 
   async function addGoal() {
     if (!title.trim()) return;
-    await createGoal.mutateAsync({ name: title, target_amount: Number(targetAmount.replace(',', '.')) || 5000 });
+    await createGoal.mutateAsync({ name: title, target_amount: parseCurrencyInput(targetAmount) || 5000 });
     setTitle('');
     setTargetAmount('');
     setShowForm(false);
   }
 
   async function addDeposit(goalId: string, currentAmount: number, targetAmountValue: number) {
-    const value = Number(deposit.replace(',', '.'));
+    const value = parseCurrencyInput(deposit);
     if (!value || value <= 0) return;
     await addContribution.mutateAsync({ goalId, amount: value, currentAmount, targetAmount: targetAmountValue });
     setDeposit('');

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Search, Settings, WalletCards, X } from 'lucide-react';
 import { SectionPageTitle } from '@/components/dashboard/SectionPageTitle';
-import { CurrencyInput } from '@/components/CurrencyInput';
+import { CurrencyInput, parseCurrencyInput } from '@/components/CurrencyInput';
 import { useAccounts } from '@/hooks/useAccounts';
 import { useCreateTransaction, useTransactions } from '@/hooks/useTransactions';
 import { useCreateRecurringTransaction, useRecurringTransactions, useUpdateRecurringTransaction } from '@/hooks/useRecurringTransactions';
@@ -38,7 +38,7 @@ export function ReceitasPage() {
 
   async function addSalary() {
     if (!salaryName.trim() || !salaryValue.trim() || !activeAccountId) return;
-    const amount = Number(salaryValue.replace(',', '.')) || 0;
+    const amount = parseCurrencyInput(salaryValue);
     const date = receiptDate || todayISODate();
 
     if (incomeKind === 'recorrente') {
@@ -73,7 +73,7 @@ export function ReceitasPage() {
 
   async function saveSalaryEdit() {
     if (!editingId || !salaryName.trim() || !salaryValue.trim()) return;
-    await updateRecurring.mutateAsync({ id: editingId, description: salaryName, amount: Number(salaryValue.replace(',', '.')) || 0 });
+    await updateRecurring.mutateAsync({ id: editingId, description: salaryName, amount: parseCurrencyInput(salaryValue) });
     setEditingId(null);
     setSalaryName('');
     setSalaryValue('');
