@@ -94,7 +94,7 @@ export function MetasPage() {
           return (
             <article
               className={`goal-card stagger-fade-item ${historyGoal === goal.id ? 'history-open' : ''}`}
-              style={{ animationDelay: `${goalIndex * 80}ms` }}
+              style={{ animationDelay: `${goalIndex * 100}ms` }}
               key={goal.id}
             >
               <div className="goal-top">

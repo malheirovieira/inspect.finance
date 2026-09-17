@@ -297,6 +297,21 @@ export function DashboardPage() {
   const upcomingPayments = useMemo(() => sortByUpcomingDay(recurringExpenses), [recurringExpenses]);
   const upcomingReceivables = useMemo(() => sortByUpcomingDay(recurringIncomes), [recurringIncomes]);
 
+  // Seções sem dados reais não renderizam (em vez de mostrar um card vazio) — regra pedida
+  // explicitamente pra não poluir o dashboard de quem ainda não cadastrou nada.
+  const { year: nowYear, month: nowMonth } = currentYearMonthBrasilia();
+  const previousMonth = shiftMonth(nowYear, nowMonth, -1);
+  const hasExpenseChartData = useMemo(() => {
+    const current = dailyTotals(expenseTransactions, nowYear, nowMonth);
+    const previous = dailyTotals(expenseTransactions, previousMonth.year, previousMonth.month);
+    return current.some((v) => v > 0) || previous.some((v) => v > 0);
+  }, [expenseTransactions, nowYear, nowMonth, previousMonth.year, previousMonth.month]);
+  const hasRecentTransactions = recentTransactions.length > 0;
+  const hasUpcomingPayments = upcomingPayments.length > 0;
+  const hasUpcomingReceivables = upcomingReceivables.length > 0;
+  const hasCards = cardAccounts.length > 0;
+  const showLowerGrid = hasUpcomingPayments || hasCards;
+
   return (
     <div className="dashboard-home">
       <SectionPageTitle title="Dashboard" />
@@ -341,7 +356,7 @@ export function DashboardPage() {
               <button
                 key={account.id}
                 className="stagger-fade-item"
-                style={{ animationDelay: `${index * 80}ms` }}
+                style={{ animationDelay: `${index * 100}ms` }}
                 onClick={() => navigate('/app/conta-corrente')}
               >
                 <span>{account.institution}</span>
@@ -354,7 +369,7 @@ export function DashboardPage() {
       </section>
 
       {widgets.includes('goals') && (
-        <div className="dashboard-widget goals-widget stagger-fade-item" style={{ animationDelay: '80ms' }}>
+        <div className="dashboard-widget goals-widget stagger-fade-item" style={{ animationDelay: '100ms' }}>
           <GoalsSummaryCard
             goals={goals}
             onNavigate={() => navigate('/app/metas')}
@@ -363,7 +378,7 @@ export function DashboardPage() {
         </div>
       )}
 
-      <div className="dashboard-widget overview-widget stagger-fade-item" style={{ animationDelay: '160ms' }}>
+      <div className="dashboard-widget overview-widget stagger-fade-item" style={{ animationDelay: '200ms' }}>
         <div className="widget-label">
           <button className="dashboard-card-title" onClick={() => navigate('/app/despesas')}>
             Visão financeira
@@ -371,134 +386,140 @@ export function DashboardPage() {
         </div>
         <div className="dashboard-grid">
           <div className="main-column">
-            <section className="expense-card">
-              <div className="expense-panels">
-                {expensePanel === 0 ? (
-                  <ExpenseChart expenses={expenseTransactions} onViewReport={() => navigate('/app/relatorios')} />
-                ) : (
-                  <FinancialCalendar expenses={expenseTransactions} recurring={recurringExpenses} />
-                )}
-              </div>
-              <div className="panel-dots">
-                <button className={expensePanel === 0 ? 'active' : ''} onClick={() => setExpensePanel(0)} aria-label="Ver despesas" />
-                <button className={expensePanel === 1 ? 'active' : ''} onClick={() => setExpensePanel(1)} aria-label="Ver calendário" />
-              </div>
-            </section>
+            {hasExpenseChartData && (
+              <section className="expense-card">
+                <div className="expense-panels">
+                  {expensePanel === 0 ? (
+                    <ExpenseChart expenses={expenseTransactions} onViewReport={() => navigate('/app/relatorios')} />
+                  ) : (
+                    <FinancialCalendar expenses={expenseTransactions} recurring={recurringExpenses} />
+                  )}
+                </div>
+                <div className="panel-dots">
+                  <button className={expensePanel === 0 ? 'active' : ''} onClick={() => setExpensePanel(0)} aria-label="Ver despesas" />
+                  <button className={expensePanel === 1 ? 'active' : ''} onClick={() => setExpensePanel(1)} aria-label="Ver calendário" />
+                </div>
+              </section>
+            )}
 
-            <section className="dashboard-transactions-card">
-              <div className="section-heading">
-                <button className="dashboard-card-title" onClick={() => navigate('/app/conta-corrente')}>
-                  Conta corrente
-                </button>
-                <button onClick={() => navigate('/app/conta-corrente')}>Ver todas</button>
-              </div>
-              <div className="dashboard-transaction-cards">
-                {recentTransactions.length === 0 && <p className="empty-state">Nenhuma transação registrada ainda.</p>}
-                {recentTransactions.map((tx, index) => (
-                  <article key={tx.id} className="stagger-fade-item" style={{ animationDelay: `${index * 80}ms` }}>
-                    <span className={`transaction-card-icon ${tx.type === 'income' ? 'income' : 'expense'}`}>
-                      {tx.type === 'income' ? '+' : '−'}
-                    </span>
-                    <div>
-                      <strong>{tx.description}</strong>
-                      <small>{formatDate(tx.date, { day: '2-digit', month: 'short' })}</small>
-                    </div>
-                    <b className={tx.type === 'income' ? 'income' : ''}>
-                      {tx.type === 'income' ? '+ ' : '− '}
-                      {formatCurrency(tx.amount)}
-                    </b>
-                  </article>
-                ))}
-              </div>
-            </section>
-
-            <div className="lower-grid">
-              <section className="scheduled">
+            {hasRecentTransactions && (
+              <section className="dashboard-transactions-card">
                 <div className="section-heading">
-                  <h2>Pagamentos agendados</h2>
-                  <button onClick={() => navigate('/app/despesas')}>Ver todos</button>
+                  <button className="dashboard-card-title" onClick={() => navigate('/app/conta-corrente')}>
+                    Conta corrente
+                  </button>
+                  <button onClick={() => navigate('/app/conta-corrente')}>Ver todas</button>
                 </div>
-                {upcomingPayments.length === 0 && <p className="empty-state">Nenhuma despesa recorrente cadastrada ainda.</p>}
-                {upcomingPayments.map((payment, index) => (
-                  <div className="payment stagger-fade-item" style={{ animationDelay: `${index * 80}ms` }} key={payment.id}>
-                    <span className="payment-avatar">{payment.description.slice(0, 2).toUpperCase()}</span>
-                    <div>
-                      <strong>{payment.description}</strong>
-                      <small>Todo dia {payment.day_of_month}</small>
+                <div className="dashboard-transaction-cards">
+                  {recentTransactions.map((tx, index) => (
+                    <article key={tx.id} className="stagger-fade-item" style={{ animationDelay: `${index * 100}ms` }}>
+                      <span className={`transaction-card-icon ${tx.type === 'income' ? 'income' : 'expense'}`}>
+                        {tx.type === 'income' ? '+' : '−'}
+                      </span>
+                      <div>
+                        <strong>{tx.description}</strong>
+                        <small>{formatDate(tx.date, { day: '2-digit', month: 'short' })}</small>
+                      </div>
+                      <b className={tx.type === 'income' ? 'income' : ''}>
+                        {tx.type === 'income' ? '+ ' : '− '}
+                        {formatCurrency(tx.amount)}
+                      </b>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {showLowerGrid && (
+              <div className="lower-grid">
+                {hasUpcomingPayments && (
+                  <section className="scheduled">
+                    <div className="section-heading">
+                      <h2>Pagamentos agendados</h2>
+                      <button onClick={() => navigate('/app/despesas')}>Ver todos</button>
                     </div>
-                    <b>{formatCurrency(payment.amount)}</b>
+                    {upcomingPayments.map((payment, index) => (
+                      <div className="payment stagger-fade-item" style={{ animationDelay: `${index * 100}ms` }} key={payment.id}>
+                        <span className="payment-avatar">{payment.description.slice(0, 2).toUpperCase()}</span>
+                        <div>
+                          <strong>{payment.description}</strong>
+                          <small>Todo dia {payment.day_of_month}</small>
+                        </div>
+                        <b>{formatCurrency(payment.amount)}</b>
+                      </div>
+                    ))}
+                  </section>
+                )}
+                {hasCards && (
+                  <section className="premium-card wallet-card">
+                    <span className="eyebrow">CARTEIRA</span>
+                    <h2>Meus cartões</h2>
+                    <div className="wallet-credit-card">
+                      <div className="card-top">
+                        <strong>{fullName}</strong>
+                        <span>{cardAccounts[0].institution}</span>
+                      </div>
+                      <div className="card-number">•••• &nbsp; •••• &nbsp; •••• &nbsp; ••••</div>
+                      <div className="card-bottom">
+                        <span>{cardAccounts[0].name}</span>
+                        <b>{formatCurrency(cardAccounts[0].credit_limit ?? 0)}</b>
+                      </div>
+                    </div>
+                    <div className="wallet-footer">
+                      <span>{cardAccounts.length} cartões cadastrados</span>
+                      <button onClick={() => navigate('/app/bancos')}>Ver carteira</button>
+                    </div>
+                  </section>
+                )}
+              </div>
+            )}
+
+            {hasUpcomingReceivables && (
+              <section className="scheduled" style={{ marginTop: 28 }}>
+                <div className="section-heading">
+                  <h2>Previsão de recebimentos</h2>
+                  <button onClick={() => navigate('/app/receitas')}>Ver todos</button>
+                </div>
+                {upcomingReceivables.map((receivable, index) => (
+                  <div className="payment stagger-fade-item" style={{ animationDelay: `${index * 100}ms` }} key={receivable.id}>
+                    <span className="payment-avatar">{receivable.description.slice(0, 2).toUpperCase()}</span>
+                    <div>
+                      <strong>{receivable.description}</strong>
+                      <small>Todo dia {receivable.day_of_month}</small>
+                    </div>
+                    <b>{formatCurrency(receivable.amount)}</b>
                   </div>
                 ))}
               </section>
-              <section className="premium-card wallet-card">
-                <span className="eyebrow">CARTEIRA</span>
-                <h2>Meus cartões</h2>
-                {cardAccounts.length === 0 ? (
-                  <p className="empty-state">Nenhum cartão cadastrado ainda.</p>
-                ) : (
-                  <div className="wallet-credit-card">
-                    <div className="card-top">
-                      <strong>{fullName}</strong>
-                      <span>{cardAccounts[0].institution}</span>
-                    </div>
-                    <div className="card-number">•••• &nbsp; •••• &nbsp; •••• &nbsp; ••••</div>
-                    <div className="card-bottom">
-                      <span>{cardAccounts[0].name}</span>
-                      <b>{formatCurrency(cardAccounts[0].credit_limit ?? 0)}</b>
-                    </div>
-                  </div>
-                )}
-                <div className="wallet-footer">
-                  <span>{cardAccounts.length} cartões cadastrados</span>
-                  <button onClick={() => navigate('/app/bancos')}>Ver carteira</button>
-                </div>
-              </section>
-            </div>
-
-            <section className="scheduled" style={{ marginTop: 28 }}>
-              <div className="section-heading">
-                <h2>Previsão de recebimentos</h2>
-                <button onClick={() => navigate('/app/receitas')}>Ver todos</button>
-              </div>
-              {upcomingReceivables.length === 0 && <p className="empty-state">Nenhuma receita recorrente cadastrada ainda.</p>}
-              {upcomingReceivables.map((receivable, index) => (
-                <div className="payment stagger-fade-item" style={{ animationDelay: `${index * 80}ms` }} key={receivable.id}>
-                  <span className="payment-avatar">{receivable.description.slice(0, 2).toUpperCase()}</span>
-                  <div>
-                    <strong>{receivable.description}</strong>
-                    <small>Todo dia {receivable.day_of_month}</small>
-                  </div>
-                  <b>{formatCurrency(receivable.amount)}</b>
-                </div>
-              ))}
-            </section>
+            )}
           </div>
         </div>
       </div>
 
-      <section className="reimbursements">
-        <div className="section-heading">
-          <h2>Transações</h2>
-          <button onClick={() => navigate('/app/conta-corrente')}>Ver todos</button>
-        </div>
-        {recentTransactions.length === 0 && <p className="empty-state">Nenhuma transação registrada ainda.</p>}
-        {recentTransactions.map((tx, index) => (
-          <article className="reimbursement stagger-fade-item" style={{ animationDelay: `${index * 80}ms` }} key={tx.id}>
-            <div className="reimbursement-row">
-              <div className="mini-avatar">{tx.description.slice(0, 2).toUpperCase()}</div>
-              <div className="reimbursement-name">
-                <strong>{tx.description}</strong>
-                <small className={tx.type === 'income' ? 'income' : ''}>
-                  {tx.type === 'income' ? '+ ' : '− '}
-                  {formatCurrency(tx.amount)}
-                </small>
+      {hasRecentTransactions && (
+        <section className="reimbursements">
+          <div className="section-heading">
+            <h2>Transações</h2>
+            <button onClick={() => navigate('/app/conta-corrente')}>Ver todos</button>
+          </div>
+          {recentTransactions.map((tx, index) => (
+            <article className="reimbursement stagger-fade-item" style={{ animationDelay: `${index * 100}ms` }} key={tx.id}>
+              <div className="reimbursement-row">
+                <div className="mini-avatar">{tx.description.slice(0, 2).toUpperCase()}</div>
+                <div className="reimbursement-name">
+                  <strong>{tx.description}</strong>
+                  <small className={tx.type === 'income' ? 'income' : ''}>
+                    {tx.type === 'income' ? '+ ' : '− '}
+                    {formatCurrency(tx.amount)}
+                  </small>
+                </div>
+                <button className="status">Concluída</button>
+                <ChevronDown />
               </div>
-              <button className="status">Concluída</button>
-              <ChevronDown />
-            </div>
-          </article>
-        ))}
-      </section>
+            </article>
+          ))}
+        </section>
+      )}
     </div>
   );
 }

@@ -30,6 +30,9 @@ interface CreateAccountInput {
   institution: string;
   balance: number;
   credit_limit?: number;
+  card_brand?: string;
+  billing_closing_day?: number;
+  billing_due_day?: number;
   color?: string;
 }
 

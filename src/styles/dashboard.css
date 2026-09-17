@@ -106,6 +106,44 @@
 .panel-dots button.active { width:18px; border-radius:4px; background:var(--coral); }
 
 /* ============================================================================
+ * MODAL genérico (src/components/Modal.tsx) — sem dependência nova.
+ * ========================================================================== */
+.modal-overlay { position:fixed; inset:0; z-index:50; display:flex; align-items:center; justify-content:center; padding:20px; background:rgba(10,10,10,.45); animation:dash-fade-in-up .15s ease-out both; }
+.modal-panel { position:relative; width:100%; max-width:480px; max-height:90vh; overflow-y:auto; padding:28px; background:#fff; border-radius:17px; box-shadow:0 30px 60px rgba(0,0,0,.25); animation:dash-modal-in .2s ease-out both; }
+.modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+.modal-header h3 { margin:0; font-size:1.1rem; font-weight:600; color:#111111; }
+.modal-panel .bank-account-form { margin-bottom:0; }
+
+/* ============================================================================
+ * BANCOS — contas agrupadas com cartões vinculados (accordion) + cartões
+ * independentes separados por divisor.
+ * ========================================================================== */
+.bank-section-divider { display:flex; align-items:center; gap:12px; margin:32px 0 16px; color:#666666; font-size:.85rem; font-weight:500; }
+.bank-section-divider::before, .bank-section-divider::after { content:''; flex:1; height:1px; background:var(--line); }
+.bank-group-card { padding:20px 24px; margin-bottom:14px; background:#fff; border-radius:16px; box-shadow:0 12px 28px rgba(75,97,110,.08); }
+.bank-group-header { display:flex; align-items:center; gap:14px; cursor:pointer; }
+.bank-group-header .account-icon { flex-shrink:0; }
+.bank-group-main { flex:1; min-width:0; }
+.bank-group-main strong { display:block; font-size:1.1rem; font-weight:600; color:#111111; }
+.bank-group-main small { display:block; margin-top:4px; color:#666666; font-size:.85rem; }
+.bank-group-balance { text-align:right; }
+.bank-group-balance b { display:block; font-size:1.1rem; font-weight:600; color:#111111; }
+.bank-group-chevron { color:#999999; transition:transform .2s ease; flex-shrink:0; }
+.bank-group-chevron.open { transform:rotate(180deg); }
+.status-chip { display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:12px; font-size:.7rem; font-weight:600; letter-spacing:.02em; text-transform:uppercase; }
+.status-chip.active { color:#1a6b1a; background:#e3f3e3; }
+.status-chip.inactive { color:#6b6b6b; background:#eceeec; }
+.status-chip.error { color:#B91C1C; background:#fdeaea; }
+.bank-group-body { margin-top:18px; padding-top:16px; border-top:1px solid var(--line); animation:dash-fade-in-up .25s ease-out both; }
+.bank-group-body-title { margin:0 0 10px; color:#999999; font-size:.75rem; font-weight:600; text-transform:uppercase; letter-spacing:.04em; }
+.linked-card-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--line); }
+.linked-card-row:last-child { border-bottom:0; }
+.linked-card-row .account-main { flex:1; }
+.add-card-inline-button { display:inline-flex; align-items:center; gap:6px; margin-top:12px; padding:8px 12px; color:var(--charcoal); background:#edf2e9; border-radius:7px; font-size:.8rem; font-weight:500; }
+.add-card-inline-button svg { width:14px; height:14px; }
+.independent-cards-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:14px; }
+
+/* ============================================================================
  * PRÉVIA ANIMADA DE CARTÃO (BancosPage) — puramente ilustrativa.
  * ========================================================================== */
 .card-preview-scene { display:flex; justify-content:center; margin-bottom:24px; perspective:1200px; grid-column:1 / -1; }
@@ -139,7 +177,27 @@
 .skeleton-text { height:12px; margin:6px 0; }
 .skeleton-block { width:100%; height:100%; min-height:60px; }
 
-.stagger-fade-item { animation:dash-fade-in-up .45s ease-out both; }
+@keyframes dash-fade-in-up-lg { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+.stagger-fade-item { animation:dash-fade-in-up-lg .45s ease-out both; }
+
+/* Hover nos cards principais — leve elevação, sem mexer em cor/borda. .goal-card já tem hover
+   próprio (translateY + borda) definido mais acima — não sobrescrever aqui. */
+.dashboard-account-widget, .dashboard-goals-card, .expense-card, .dashboard-transactions-card,
+.report-panel, .scheduled, .premium-card, .bank-group-card {
+  transition:transform .2s ease, box-shadow .2s ease;
+}
+.dashboard-account-widget:hover, .expense-card:hover, .dashboard-transactions-card:hover,
+.report-panel:hover, .scheduled:hover, .premium-card:hover, .bank-group-card:hover {
+  transform:scale(1.02);
+  box-shadow:0 22px 40px rgba(30,42,14,.14);
+}
+
+/* Border-left sutil pra diferenciar os cards principais do resto — mesma cor accent do sistema,
+   sem mexer em fundo/sombra existentes. */
+.expense-card, .dashboard-transactions-card, .scheduled, .report-panel, .bank-group-card {
+  border-left:3px solid var(--coral);
+}
+.dashboard-account-widget { border-left:3px solid var(--charcoal); }
 
 @keyframes dash-slide-in-top { from { opacity:0; transform:translateY(-14px); } to { opacity:1; transform:translateY(0); } }
 .list-item-enter { animation:dash-slide-in-top .35s ease-out both; }
@@ -178,7 +236,7 @@
 
 /* Destaque do saldo principal (6.1) — só tipografia/hierarquia, sem mudar cores/card. */
 .dashboard-total-balance .balance-label { color:#c6d1c3; font-size:10px; text-transform:uppercase; letter-spacing:.4px; }
-.dashboard-total-balance strong.balance-highlight { margin:8px 0 4px; font-size:clamp(2rem, 2.4vw, 2.5rem); font-weight:300; letter-spacing:-.3px; }
+.dashboard-total-balance strong.balance-highlight { margin:8px 0 4px; font-size:clamp(2rem, 2.4vw, 2.5rem); font-weight:700; letter-spacing:-.3px; }
 
 /* Refinamento conservador do dashboard (6.2) — só espaçamento/tipografia. */
 .dashboard-home { gap:24px; }
@@ -203,8 +261,8 @@
 .account-main small, .payment small, .dashboard-transaction-cards small, .history-entry small,
 .salary-row > span, .recurring-row > span, .account-row > small { color:#999999; font-size:.75rem; }
 
-/* Saldo em destaque — maior card do dashboard (ver hierarquia na seção de tamanhos abaixo). */
-.balance-highlight { color:#111111; }
+/* Saldo em destaque — fica sobre o card escuro (.dashboard-total-balance já define color:#fff
+   no elemento pai) — não sobrescrever aqui, senão o texto vira escuro-sobre-escuro. */
 
 /* ============================================================================
  * HIERARQUIA DE TAMANHO — o saldo total e o gráfico de despesas são os dados

@@ -39,6 +39,9 @@ export interface Account {
   currency: string;
   balance: number;
   credit_limit: number | null;
+  card_brand: string | null;
+  billing_closing_day: number | null;
+  billing_due_day: number | null;
   color: string;
   icon: string;
   is_active: boolean;
