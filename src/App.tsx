@@ -22,7 +22,6 @@ import { RelatoriosPage } from '@/pages/app/RelatoriosPage';
 import { FinanceIAPage } from '@/pages/app/FinanceIAPage';
 import { ColaboradoresPage } from '@/pages/app/ColaboradoresPage';
 import { AssinaturaPage } from '@/pages/app/AssinaturaPage';
-import { OnboardingPage } from '@/pages/app/OnboardingPage';
 import { ParametrizacoesPage } from '@/pages/app/ParametrizacoesPage';
 import { EmptyPage } from '@/components/dashboard/EmptyPage';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
@@ -77,7 +76,6 @@ export function App() {
               <Route path="colaboradores" element={<ColaboradoresPage />} />
               <Route path="parametrizacoes" element={<ParametrizacoesPage />} />
               <Route path="assinatura" element={<AssinaturaPage />} />
-              <Route path="onboarding" element={<OnboardingPage />} />
               <Route path="ajuda" element={<EmptyPage title="Ajuda" />} />
               <Route path="*" element={<Navigate to="dashboard" replace />} />
             </Route>

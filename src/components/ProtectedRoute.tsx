@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useCurrentSubscription } from '@/hooks/useSubscription';
@@ -9,13 +9,10 @@ interface ProtectedRouteProps {
   children: ReactNode;
 }
 
-const ONBOARDING_PATH = '/app/onboarding';
-
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, loading } = useAuth();
   const { data: profile, isLoading: profileLoading } = useProfile();
   const { data: subscription, isLoading: subscriptionLoading } = useCurrentSubscription();
-  const location = useLocation();
 
   if (loading || (isAuthenticated && (profileLoading || subscriptionLoading))) {
     // Cobre a sessão inicial E a checagem de plano/assinatura — o app (sidebar, dashboard, etc.)
@@ -41,11 +38,6 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     // Trial vencido ou assinatura cancelada/vencida sem período restante: tela dedicada, fora do
     // shell, sem nenhum redirect automático de volta (evita ping-pong com /login ou /app).
     return <Navigate to="/plano-expirado" replace />;
-  }
-
-  // Primeiro acesso com pagamento confirmado: passa pelo onboarding antes do resto do app.
-  if (profile && !profile.onboarding_completed && location.pathname !== ONBOARDING_PATH) {
-    return <Navigate to={ONBOARDING_PATH} replace />;
   }
 
   return <>{children}</>;

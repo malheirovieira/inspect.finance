@@ -3,6 +3,7 @@ import { Plus, X } from 'lucide-react';
 import { SectionPageTitle } from '@/components/dashboard/SectionPageTitle';
 import { CurrencyInput } from '@/components/CurrencyInput';
 import { useAddGoalContribution, useCreateGoal, useGoalContributions, useGoals } from '@/hooks/useGoals';
+import { useRevealOnVisible } from '@/hooks/useRevealOnVisible';
 import { formatDateTime } from '@/lib/datetime';
 
 function formatCurrency(value: number) {
@@ -34,6 +35,7 @@ export function MetasPage() {
   const { data: goals = [], isLoading } = useGoals();
   const createGoal = useCreateGoal();
   const addContribution = useAddGoalContribution();
+  const [goalsGridRef, goalsGridVisible] = useRevealOnVisible<HTMLDivElement>();
 
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState('');
@@ -84,19 +86,26 @@ export function MetasPage() {
       {isLoading && <p className="empty-state">Carregando metas...</p>}
       {!isLoading && goals.length === 0 && !showForm && <p className="empty-state">Nenhuma meta cadastrada ainda. Crie a primeira!</p>}
 
-      <div className="goals-grid">
-        {goals.map((goal) => {
+      <div className="goals-grid" ref={goalsGridRef}>
+        {goals.map((goal, goalIndex) => {
           const progress = Math.min(Math.round((goal.current_amount / goal.target_amount) * 100), 100);
           const remaining = goal.target_amount - goal.current_amount;
 
           return (
-            <article className={`goal-card ${historyGoal === goal.id ? 'history-open' : ''}`} key={goal.id}>
+            <article
+              className={`goal-card stagger-fade-item ${historyGoal === goal.id ? 'history-open' : ''}`}
+              style={{ animationDelay: `${goalIndex * 80}ms` }}
+              key={goal.id}
+            >
               <div className="goal-top">
                 <div>
                   <span className="goal-type">Economia</span>
                   <h3>{goal.name}</h3>
                 </div>
-                <div className="donut" style={{ '--progress': `${progress * 3.6}deg` } as CSSProperties}>
+                <div
+                  className="donut"
+                  style={{ '--progress': `${(goalsGridVisible ? progress : 0) * 3.6}deg` } as CSSProperties}
+                >
                   <span>{progress}%</span>
                 </div>
               </div>
@@ -111,7 +120,7 @@ export function MetasPage() {
                 </span>
               </div>
               <div className="progress-line">
-                <i style={{ width: `${progress}%` }} />
+                <i style={{ width: goalsGridVisible ? `${progress}%` : 0 }} />
               </div>
               <p>{remaining > 0 ? `Faltam ${formatCurrency(remaining)} para concluir esta meta.` : 'Meta concluída.'}</p>
               <div className="goal-actions">

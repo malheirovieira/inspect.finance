@@ -1,11 +1,13 @@
-import { useMemo, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronDown, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, Eye, EyeOff, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useAccounts } from '@/hooks/useAccounts';
 import { useGoals } from '@/hooks/useGoals';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useRecurringTransactions } from '@/hooks/useRecurringTransactions';
+import { useCountUp } from '@/hooks/useCountUp';
+import { useRevealOnVisible } from '@/hooks/useRevealOnVisible';
 import type { Goal, Transaction } from '@/types/database';
 import { SectionPageTitle } from '@/components/dashboard/SectionPageTitle';
 import {
@@ -17,8 +19,32 @@ import {
   weekdayOfFirstDay,
 } from '@/lib/datetime';
 
+const HIDE_BALANCE_KEY = 'dashboard:hideBalance';
+
 function formatCurrency(value: number) {
   return `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+}
+
+function readHideBalance(): boolean {
+  try {
+    return localStorage.getItem(HIDE_BALANCE_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function writeHideBalance(hidden: boolean) {
+  try {
+    localStorage.setItem(HIDE_BALANCE_KEY, hidden ? '1' : '0');
+  } catch {
+    // localStorage indisponível (modo privado etc.) — estado só dura a sessão em memória.
+  }
+}
+
+/** Valor monetário com efeito de contagem (0 → valor real) — usado nos números de destaque. */
+function CountUpCurrency({ value, hidden }: { value: number; hidden?: boolean }) {
+  const animated = useCountUp(value);
+  return <span className="balance-value">{hidden ? 'R$ ••••••' : formatCurrency(animated)}</span>;
 }
 
 const WEEKDAYS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
@@ -43,6 +69,7 @@ function dailyTotals(transactions: Transaction[], year: number, month: number) {
 }
 
 function GoalsSummaryCard({ goals, onNavigate, onRemove }: { goals: Goal[]; onNavigate: () => void; onRemove: () => void }) {
+  const [listRef, listVisible] = useRevealOnVisible<HTMLDivElement>();
   return (
     <section className="dashboard-goals-card">
       <div className="dashboard-goals-heading">
@@ -53,13 +80,17 @@ function GoalsSummaryCard({ goals, onNavigate, onRemove }: { goals: Goal[]; onNa
           </button>
         </div>
       </div>
+      <div ref={listRef}>
       {goals.length === 0 && <p className="empty-state">Nenhuma meta cadastrada ainda.</p>}
       {goals.slice(0, 2).map((goal, index) => {
         const progress = Math.min(Math.round((goal.current_amount / goal.target_amount) * 100), 100);
         const remaining = goal.target_amount - goal.current_amount;
         return (
           <div className="dashboard-goal-row" key={goal.id}>
-            <div className={`dashboard-goal-donut ${index === 1 ? 'travel' : ''}`} style={{ '--progress': `${progress * 3.6}deg` } as CSSProperties}>
+            <div
+              className={`dashboard-goal-donut ${index === 1 ? 'travel' : ''}`}
+              style={{ '--progress': `${(listVisible ? progress : 0) * 3.6}deg` } as CSSProperties}
+            >
               <span>{progress}%</span>
             </div>
             <div>
@@ -68,7 +99,7 @@ function GoalsSummaryCard({ goals, onNavigate, onRemove }: { goals: Goal[]; onNa
                 {formatCurrency(goal.current_amount)} de {formatCurrency(goal.target_amount)}
               </small>
               <div className="dashboard-goal-progress">
-                <i style={{ width: `${progress}%` }} />
+                <i style={{ width: listVisible ? `${progress}%` : 0 }} />
               </div>
             </div>
             <b>
@@ -79,6 +110,7 @@ function GoalsSummaryCard({ goals, onNavigate, onRemove }: { goals: Goal[]; onNa
           </div>
         );
       })}
+      </div>
       <button className="dashboard-goals-link" onClick={onNavigate}>
         Ver todas as metas <ChevronRight />
       </button>
@@ -92,6 +124,7 @@ function GoalsSummaryCard({ goals, onNavigate, onRemove }: { goals: Goal[]; onNa
 function ExpenseChart({ expenses, onViewReport }: { expenses: Transaction[]; onViewReport: () => void }) {
   const { year: nowYear, month: nowMonth } = currentYearMonthBrasilia();
   const previous = shiftMonth(nowYear, nowMonth, -1);
+  const [chartRef, chartVisible] = useRevealOnVisible<HTMLDivElement>();
 
   const currentTotals = useMemo(() => dailyTotals(expenses, nowYear, nowMonth), [expenses, nowYear, nowMonth]);
   const previousTotals = useMemo(() => dailyTotals(expenses, previous.year, previous.month), [expenses, previous.year, previous.month]);
@@ -111,13 +144,15 @@ function ExpenseChart({ expenses, onViewReport }: { expenses: Transaction[]; onV
           </p>
         </div>
         <div className="expense-total">
-          <strong>{formatCurrency(monthTotal)}</strong>
+          <strong>
+            <CountUpCurrency value={monthTotal} />
+          </strong>
         </div>
       </div>
       {daysWithData.length === 0 ? (
         <p className="empty-state">Não há gastos para serem analisados.</p>
       ) : (
-        <div className="chart">
+        <div className="chart" ref={chartRef}>
           <div className="chart-grid">
             <span />
             <span />
@@ -127,8 +162,8 @@ function ExpenseChart({ expenses, onViewReport }: { expenses: Transaction[]; onV
           <div className="bars">
             {daysWithData.map((i) => (
               <div className="bar-group" key={i}>
-                <i style={{ height: `${((currentTotals[i] ?? 0) / maxValue) * 100}%` }} />
-                <b style={{ height: `${((previousTotals[i] ?? 0) / maxValue) * 100}%` }} />
+                <i style={{ height: chartVisible ? `${((currentTotals[i] ?? 0) / maxValue) * 100}%` : 0 }} />
+                <b style={{ height: chartVisible ? `${((previousTotals[i] ?? 0) / maxValue) * 100}%` : 0 }} />
               </div>
             ))}
           </div>
@@ -233,6 +268,9 @@ export function DashboardPage() {
   const fullName = (user?.user_metadata?.full_name as string | undefined) ?? user?.email?.split('@')[0] ?? 'Usuário';
   const [expensePanel, setExpensePanel] = useState(0);
   const [widgets, setWidgets] = useState<string[]>(['overview', 'goals', 'expenses']);
+  const [hideBalance, setHideBalance] = useState(readHideBalance);
+
+  useEffect(() => writeHideBalance(hideBalance), [hideBalance]);
 
   const { data: accounts = [] } = useAccounts();
   const { data: goals = [] } = useGoals();
@@ -282,17 +320,33 @@ export function DashboardPage() {
         </div>
         <div className="dashboard-account-body">
           <div className="dashboard-total-balance">
-            <span>Saldo total</span>
-            <strong>{formatCurrency(totalBalance)}</strong>
+            <span className="balance-label">Saldo disponível</span>
+            <strong className="balance-highlight">
+              <CountUpCurrency value={totalBalance} hidden={hideBalance} />
+              <button
+                type="button"
+                className="balance-toggle-btn"
+                onClick={() => setHideBalance((current) => !current)}
+                title="Mostrar/ocultar saldo"
+                aria-label="Mostrar/ocultar saldo"
+              >
+                {hideBalance ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </strong>
             <small>{accounts.length} contas cadastradas</small>
           </div>
           <div className="dashboard-account-cards">
             {accounts.length === 0 && <p className="empty-state">Nenhuma conta cadastrada ainda.</p>}
-            {accounts.map((account) => (
-              <button key={account.id} onClick={() => navigate('/app/conta-corrente')}>
+            {accounts.map((account, index) => (
+              <button
+                key={account.id}
+                className="stagger-fade-item"
+                style={{ animationDelay: `${index * 80}ms` }}
+                onClick={() => navigate('/app/conta-corrente')}
+              >
                 <span>{account.institution}</span>
                 <strong>{account.name}</strong>
-                <b>{formatCurrency(account.balance)}</b>
+                <b>{hideBalance ? 'R$ ••••••' : formatCurrency(account.balance)}</b>
               </button>
             ))}
           </div>
@@ -300,7 +354,7 @@ export function DashboardPage() {
       </section>
 
       {widgets.includes('goals') && (
-        <div className="dashboard-widget goals-widget">
+        <div className="dashboard-widget goals-widget stagger-fade-item" style={{ animationDelay: '80ms' }}>
           <GoalsSummaryCard
             goals={goals}
             onNavigate={() => navigate('/app/metas')}
@@ -309,7 +363,7 @@ export function DashboardPage() {
         </div>
       )}
 
-      <div className="dashboard-widget overview-widget">
+      <div className="dashboard-widget overview-widget stagger-fade-item" style={{ animationDelay: '160ms' }}>
         <div className="widget-label">
           <button className="dashboard-card-title" onClick={() => navigate('/app/despesas')}>
             Visão financeira
@@ -340,8 +394,8 @@ export function DashboardPage() {
               </div>
               <div className="dashboard-transaction-cards">
                 {recentTransactions.length === 0 && <p className="empty-state">Nenhuma transação registrada ainda.</p>}
-                {recentTransactions.map((tx) => (
-                  <article key={tx.id}>
+                {recentTransactions.map((tx, index) => (
+                  <article key={tx.id} className="stagger-fade-item" style={{ animationDelay: `${index * 80}ms` }}>
                     <span className={`transaction-card-icon ${tx.type === 'income' ? 'income' : 'expense'}`}>
                       {tx.type === 'income' ? '+' : '−'}
                     </span>
@@ -365,8 +419,8 @@ export function DashboardPage() {
                   <button onClick={() => navigate('/app/despesas')}>Ver todos</button>
                 </div>
                 {upcomingPayments.length === 0 && <p className="empty-state">Nenhuma despesa recorrente cadastrada ainda.</p>}
-                {upcomingPayments.map((payment) => (
-                  <div className="payment" key={payment.id}>
+                {upcomingPayments.map((payment, index) => (
+                  <div className="payment stagger-fade-item" style={{ animationDelay: `${index * 80}ms` }} key={payment.id}>
                     <span className="payment-avatar">{payment.description.slice(0, 2).toUpperCase()}</span>
                     <div>
                       <strong>{payment.description}</strong>
@@ -407,8 +461,8 @@ export function DashboardPage() {
                 <button onClick={() => navigate('/app/receitas')}>Ver todos</button>
               </div>
               {upcomingReceivables.length === 0 && <p className="empty-state">Nenhuma receita recorrente cadastrada ainda.</p>}
-              {upcomingReceivables.map((receivable) => (
-                <div className="payment" key={receivable.id}>
+              {upcomingReceivables.map((receivable, index) => (
+                <div className="payment stagger-fade-item" style={{ animationDelay: `${index * 80}ms` }} key={receivable.id}>
                   <span className="payment-avatar">{receivable.description.slice(0, 2).toUpperCase()}</span>
                   <div>
                     <strong>{receivable.description}</strong>
@@ -428,8 +482,8 @@ export function DashboardPage() {
           <button onClick={() => navigate('/app/conta-corrente')}>Ver todos</button>
         </div>
         {recentTransactions.length === 0 && <p className="empty-state">Nenhuma transação registrada ainda.</p>}
-        {recentTransactions.map((tx) => (
-          <article className="reimbursement" key={tx.id}>
+        {recentTransactions.map((tx, index) => (
+          <article className="reimbursement stagger-fade-item" style={{ animationDelay: `${index * 80}ms` }} key={tx.id}>
             <div className="reimbursement-row">
               <div className="mini-avatar">{tx.description.slice(0, 2).toUpperCase()}</div>
               <div className="reimbursement-name">

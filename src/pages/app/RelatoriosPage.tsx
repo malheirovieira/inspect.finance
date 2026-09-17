@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import { SectionPageTitle } from '@/components/dashboard/SectionPageTitle';
 import { useTransactions } from '@/hooks/useTransactions';
+import { useCountUp } from '@/hooks/useCountUp';
+import { useRevealOnVisible } from '@/hooks/useRevealOnVisible';
 import { currentYearMonthBrasilia, MONTH_NAMES_PT } from '@/lib/datetime';
 
 function formatCurrency(value: number) {
@@ -38,6 +40,10 @@ export function RelatoriosPage() {
     .filter((tx) => tx.type === 'income' && tx.date.startsWith(currentMonthPrefix))
     .reduce((sum, tx) => sum + tx.amount, 0);
 
+  const [barsRef, barsVisible] = useRevealOnVisible<HTMLDivElement>();
+  const animatedExpenses = useCountUp(monthExpenses);
+  const animatedIncome = useCountUp(monthIncome);
+
   return (
     <div className="page-view">
       <SectionPageTitle title="Relatórios" />
@@ -47,9 +53,9 @@ export function RelatoriosPage() {
           <h3>Resumo financeiro</h3>
           {hasAnyData ? (
             <>
-              <div className="report-bars">
+              <div className="report-bars" ref={barsRef}>
                 {last6Months.map((item, i) => (
-                  <i key={i} style={{ height: `${(item.total / maxTotal) * 100}%` }} />
+                  <i key={i} style={{ height: barsVisible ? `${(item.total / maxTotal) * 100}%` : 0 }} />
                 ))}
               </div>
               <div className="report-labels">
@@ -65,9 +71,9 @@ export function RelatoriosPage() {
         <div className="report-panel report-numbers">
           <span className="eyebrow">INDICADORES</span>
           <h3>Este mês</h3>
-          <strong>{formatCurrency(monthExpenses)}</strong>
+          <strong>{formatCurrency(animatedExpenses)}</strong>
           <p>Despesas totais</p>
-          <strong>{formatCurrency(monthIncome)}</strong>
+          <strong>{formatCurrency(animatedIncome)}</strong>
           <p>Renda recebida</p>
         </div>
       </div>

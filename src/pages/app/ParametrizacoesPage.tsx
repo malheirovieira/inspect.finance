@@ -1,17 +1,29 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Landmark } from 'lucide-react';
 import { SectionPageTitle } from '@/components/dashboard/SectionPageTitle';
 import { useAuth } from '@/hooks/useAuth';
 import { useDeleteAccount, useExportUserData } from '@/hooks/useAccountData';
+import { useHasFeature } from '@/hooks/usePlans';
 
 export function ParametrizacoesPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const exportData = useExportUserData();
   const deleteAccount = useDeleteAccount();
+  const canConnectBank = useHasFeature('bank_integration');
   const [confirmEmail, setConfirmEmail] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  function handleOpenFinanceClick() {
+    if (canConnectBank) {
+      // Tela de conexão ainda não existe — placeholder até ser implementada.
+      navigate('/app/bancos');
+    } else {
+      navigate('/app/assinatura');
+    }
+  }
 
   async function handleDelete() {
     setError(null);
@@ -39,6 +51,31 @@ export function ParametrizacoesPage() {
             {exportData.isPending ? 'Gerando arquivo...' : 'Baixar meus dados (JSON)'}
           </button>
           {exportData.isError && <p className="text-sm text-destructive" style={{ marginTop: 10 }}>Não foi possível exportar seus dados.</p>}
+        </div>
+      </div>
+
+      <div className="list-card" style={{ marginTop: 20 }}>
+        <div className="list-card-title">
+          <div>
+            <h3>
+              Open Finance <em className="pro-tag" style={{ marginLeft: 8 }}>PRO</em>
+            </h3>
+            <p>Conecte seus bancos e sincronize seu extrato automaticamente.</p>
+          </div>
+        </div>
+        <div style={{ padding: '20px 0', display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div className="account-icon">
+            <Landmark />
+          </div>
+          <button
+            className="primary-button"
+            onClick={handleOpenFinanceClick}
+            disabled={!canConnectBank}
+            title={canConnectBank ? undefined : 'Disponível nos planos Pro e Casal. Faça upgrade para acessar.'}
+            style={!canConnectBank ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
+          >
+            Conectar Open Finance
+          </button>
         </div>
       </div>
 

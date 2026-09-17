@@ -2,12 +2,22 @@ import { useState } from 'react';
 import { Landmark, Trash2, X } from 'lucide-react';
 import { SectionPageTitle } from '@/components/dashboard/SectionPageTitle';
 import { CurrencyInput } from '@/components/CurrencyInput';
+import { CardPreview } from '@/components/CardPreview';
 import { useAccounts, useCreateAccount, useDeleteAccount } from '@/hooks/useAccounts';
 import { ACCOUNT_TYPE_OPTIONS, accountTypeLabel } from '@/lib/accountTypes';
 import type { AccountType } from '@/types/database';
 
 function formatCurrency(value: number) {
   return `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+}
+
+function formatCardNumber(digits: string): string {
+  return digits.slice(0, 16).replace(/(.{4})/g, '$1 ').trim();
+}
+
+function formatExpiry(digits: string): string {
+  const trimmed = digits.slice(0, 4);
+  return trimmed.length > 2 ? `${trimmed.slice(0, 2)}/${trimmed.slice(2)}` : trimmed;
 }
 
 export function BancosPage() {
@@ -21,6 +31,14 @@ export function BancosPage() {
   const [type, setType] = useState<AccountType>('checking');
   const [balance, setBalance] = useState('');
   const [creditLimit, setCreditLimit] = useState('');
+
+  // Campos abaixo são só pra alimentar a prévia visual do cartão — nunca são enviados ao
+  // backend nem persistidos (ver CardPreview: puramente ilustrativo).
+  const [cardHolderName, setCardHolderName] = useState('');
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('');
+  const [cardCvv, setCardCvv] = useState('');
+  const [cvvFocused, setCvvFocused] = useState(false);
 
   const isCard = type === 'credit_card';
 
@@ -37,6 +55,10 @@ export function BancosPage() {
     setInstitution('');
     setBalance('');
     setCreditLimit('');
+    setCardHolderName('');
+    setCardNumber('');
+    setCardExpiry('');
+    setCardCvv('');
     setType('checking');
     setShowForm(false);
   }
@@ -55,14 +77,8 @@ export function BancosPage() {
           <button className="form-close" type="button" onClick={() => setShowForm(false)} aria-label="Cancelar cadastro">
             <X />
           </button>
-          <div className="field">
-            <label>Instituição</label>
-            <input value={institution} onChange={(event) => setInstitution(event.target.value)} placeholder="Ex.: Nubank" />
-          </div>
-          <div className="field">
-            <label>Nome da conta ou cartão</label>
-            <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Ex.: Conta principal" />
-          </div>
+
+          <div className="bank-account-section-title">Tipo de cadastro</div>
           <div className="field">
             <label>Tipo</label>
             <select value={type} onChange={(event) => setType(event.target.value as AccountType)}>
@@ -72,6 +88,57 @@ export function BancosPage() {
                 </option>
               ))}
             </select>
+          </div>
+
+          {isCard && (
+            <>
+              <div className="bank-account-section-title">Dados do cartão (prévia visual)</div>
+              <CardPreview holderName={cardHolderName} cardNumber={cardNumber} expiry={formatExpiry(cardExpiry)} cvv={cardCvv} flipped={cvvFocused} />
+              <div className="field">
+                <label>Nome no cartão</label>
+                <input value={cardHolderName} onChange={(event) => setCardHolderName(event.target.value)} placeholder="Como está impresso no cartão" />
+              </div>
+              <div className="field">
+                <label>Número do cartão</label>
+                <input
+                  inputMode="numeric"
+                  value={formatCardNumber(cardNumber)}
+                  onChange={(event) => setCardNumber(event.target.value.replace(/\D/g, ''))}
+                  placeholder="0000 0000 0000 0000"
+                />
+              </div>
+              <div className="field">
+                <label>Validade</label>
+                <input
+                  inputMode="numeric"
+                  value={formatExpiry(cardExpiry)}
+                  onChange={(event) => setCardExpiry(event.target.value.replace(/\D/g, ''))}
+                  placeholder="MM/AA"
+                />
+              </div>
+              <div className="field">
+                <label>CVV</label>
+                <input
+                  inputMode="numeric"
+                  maxLength={4}
+                  value={cardCvv}
+                  onChange={(event) => setCardCvv(event.target.value.replace(/\D/g, ''))}
+                  onFocus={() => setCvvFocused(true)}
+                  onBlur={() => setCvvFocused(false)}
+                  placeholder="•••"
+                />
+              </div>
+            </>
+          )}
+
+          <div className="bank-account-section-title">Dados da conta</div>
+          <div className="field">
+            <label>Instituição</label>
+            <input value={institution} onChange={(event) => setInstitution(event.target.value)} placeholder="Ex.: Nubank" />
+          </div>
+          <div className="field">
+            <label>{isCard ? 'Apelido do cartão' : 'Nome da conta'}</label>
+            <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Ex.: Conta principal" />
           </div>
           {isCard ? (
             <div className="field">
@@ -101,8 +168,8 @@ export function BancosPage() {
           <span>{banks.length} cadastrados</span>
         </div>
         {banks.length === 0 && <p className="empty-state">Nenhum banco cadastrado ainda.</p>}
-        {banks.map((account) => (
-          <div className="account-row" key={account.id}>
+        {banks.map((account, index) => (
+          <div className="account-row stagger-fade-item" style={{ animationDelay: `${index * 80}ms` }} key={account.id}>
             <div className="account-icon">
               <Landmark />
             </div>
@@ -129,8 +196,8 @@ export function BancosPage() {
           <span>{cards.length} cadastrados</span>
         </div>
         {cards.length === 0 && <p className="empty-state">Nenhum cartão cadastrado ainda.</p>}
-        {cards.map((account) => (
-          <div className="account-row" key={account.id}>
+        {cards.map((account, index) => (
+          <div className="account-row stagger-fade-item" style={{ animationDelay: `${index * 80}ms` }} key={account.id}>
             <div className="account-icon">
               <Landmark />
             </div>
