@@ -1,10 +1,15 @@
 import { useState } from 'react';
-import { Search, Settings, WalletCards, X } from 'lucide-react';
+import { Pencil, Search, Trash2, WalletCards, X } from 'lucide-react';
 import { SectionPageTitle } from '@/components/dashboard/SectionPageTitle';
 import { CurrencyInput, parseCurrencyInput } from '@/components/CurrencyInput';
 import { useAccounts } from '@/hooks/useAccounts';
-import { useCreateTransaction, useTransactions } from '@/hooks/useTransactions';
-import { useCreateRecurringTransaction, useRecurringTransactions, useUpdateRecurringTransaction } from '@/hooks/useRecurringTransactions';
+import { useCreateTransaction, useDeleteTransaction, useTransactions, useUpdateTransaction } from '@/hooks/useTransactions';
+import {
+  useCreateRecurringTransaction,
+  useDeleteRecurringTransaction,
+  useRecurringTransactions,
+  useUpdateRecurringTransaction,
+} from '@/hooks/useRecurringTransactions';
 import { dayOfMonthFromISODate, formatDate, todayISODate } from '@/lib/datetime';
 
 type IncomeKind = 'recorrente' | 'eventual';
@@ -22,12 +27,16 @@ export function ReceitasPage() {
   const eventualIncomes = allIncomes.filter((income) => !income.recurring_transaction_id);
   const createRecurring = useCreateRecurringTransaction();
   const updateRecurring = useUpdateRecurringTransaction();
+  const deleteRecurring = useDeleteRecurringTransaction();
   const createTransaction = useCreateTransaction();
+  const updateTransaction = useUpdateTransaction();
+  const deleteTransaction = useDeleteTransaction();
 
   const [showForm, setShowForm] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [recurringOpen, setRecurringOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingIsRecurring, setEditingIsRecurring] = useState(false);
   const [salaryName, setSalaryName] = useState('');
   const [salaryValue, setSalaryValue] = useState('');
   const [receiptDate, setReceiptDate] = useState('');
@@ -35,13 +44,71 @@ export function ReceitasPage() {
   const [incomeKind, setIncomeKind] = useState<IncomeKind>('recorrente');
 
   const activeAccountId = accountId || accounts[0]?.id || '';
+  const isSaving = createRecurring.isPending || createTransaction.isPending || updateRecurring.isPending || updateTransaction.isPending;
+
+  function resetForm() {
+    setSalaryName('');
+    setSalaryValue('');
+    setReceiptDate('');
+    setAccountId('');
+    setIncomeKind('recorrente');
+    setEditingId(null);
+    setEditingIsRecurring(false);
+    setShowForm(false);
+  }
+
+  function toggleForm() {
+    if (showForm) resetForm();
+    else setShowForm(true);
+  }
+
+  function startEdit(id: string, isRecurring: boolean) {
+    if (isRecurring) {
+      const source = recurringIncomes.find((income) => income.id === id);
+      if (!source) return;
+      setSalaryName(source.description);
+      setSalaryValue(source.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+      setReceiptDate(source.start_date);
+      setAccountId(source.account_id);
+      setIncomeKind('recorrente');
+    } else {
+      const source = eventualIncomes.find((income) => income.id === id);
+      if (!source) return;
+      setSalaryName(source.description);
+      setSalaryValue(source.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+      setReceiptDate(source.date);
+      setAccountId(source.account_id);
+      setIncomeKind('eventual');
+    }
+    setEditingId(id);
+    setEditingIsRecurring(isRecurring);
+    setShowForm(true);
+  }
+
+  function removeIncome(id: string, isRecurring: boolean) {
+    if (isRecurring) deleteRecurring.mutate(id);
+    else deleteTransaction.mutate(id);
+  }
 
   async function addSalary() {
     if (!salaryName.trim() || !salaryValue.trim() || !activeAccountId) return;
     const amount = parseCurrencyInput(salaryValue);
     const date = receiptDate || todayISODate();
 
-    if (incomeKind === 'recorrente') {
+    if (editingId) {
+      if (editingIsRecurring) {
+        await updateRecurring.mutateAsync({
+          id: editingId,
+          account_id: activeAccountId,
+          description: salaryName,
+          amount,
+          day_of_month: dayOfMonthFromISODate(date),
+          start_date: date,
+        });
+      } else {
+        await updateTransaction.mutateAsync({ id: editingId, account_id: activeAccountId, description: salaryName, amount, date });
+      }
+    } else if (incomeKind === 'recorrente') {
       await createRecurring.mutateAsync({
         account_id: activeAccountId,
         type: 'income',
@@ -59,24 +126,7 @@ export function ReceitasPage() {
         date,
       });
     }
-    setSalaryName('');
-    setSalaryValue('');
-    setReceiptDate('');
-    setShowForm(false);
-  }
-
-  function startSalaryEdit(id: string, description: string, amount: number) {
-    setEditingId(id);
-    setSalaryName(description);
-    setSalaryValue(amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
-  }
-
-  async function saveSalaryEdit() {
-    if (!editingId || !salaryName.trim() || !salaryValue.trim()) return;
-    await updateRecurring.mutateAsync({ id: editingId, description: salaryName, amount: parseCurrencyInput(salaryValue) });
-    setEditingId(null);
-    setSalaryName('');
-    setSalaryValue('');
+    resetForm();
   }
 
   const monthlyTotal = recurringIncomes.reduce((total, income) => total + income.amount, 0);
@@ -84,11 +134,11 @@ export function ReceitasPage() {
 
   return (
     <div className={`page-view ${recurringOpen ? 'recurring-view' : ''} ${historyOpen ? 'history-view' : ''}`}>
-      <SectionPageTitle title="Receitas" action="Adicionar receita" onAction={() => setShowForm(!showForm)} />
+      <SectionPageTitle title="Receitas" action="Adicionar receita" onAction={toggleForm} />
 
       {showForm && (
         <div className="form-card salary-form">
-          <button className="form-close" type="button" onClick={() => setShowForm(false)} aria-label="Cancelar cadastro de receita">
+          <button className="form-close" type="button" onClick={resetForm} aria-label="Fechar formulário">
             <X />
           </button>
           <div className="field">
@@ -114,18 +164,22 @@ export function ReceitasPage() {
               ))}
             </select>
           </div>
-          <div className="expense-kind-options">
-            <label className={`check-field ${incomeKind === 'recorrente' ? 'selected' : ''}`}>
-              <input type="checkbox" checked={incomeKind === 'recorrente'} onChange={() => setIncomeKind('recorrente')} /> Receita
-              recorrente <small>Renovação automática</small>
-            </label>
-            <label className={`check-field ${incomeKind === 'eventual' ? 'selected' : ''}`}>
-              <input type="checkbox" checked={incomeKind === 'eventual'} onChange={() => setIncomeKind('eventual')} /> Receita eventual{' '}
-              <small>Recebimento único</small>
-            </label>
-          </div>
-          <button className="primary-button" onClick={addSalary} disabled={!activeAccountId || createRecurring.isPending || createTransaction.isPending}>
-            {createRecurring.isPending || createTransaction.isPending ? 'Salvando...' : 'Salvar receita'}
+          {editingId ? (
+            <p className="edit-kind-label">Editando receita {editingIsRecurring ? 'recorrente' : 'eventual'}</p>
+          ) : (
+            <div className="expense-kind-options">
+              <label className={`check-field ${incomeKind === 'recorrente' ? 'selected' : ''}`}>
+                <input type="checkbox" checked={incomeKind === 'recorrente'} onChange={() => setIncomeKind('recorrente')} /> Receita
+                recorrente <small>Renovação automática</small>
+              </label>
+              <label className={`check-field ${incomeKind === 'eventual' ? 'selected' : ''}`}>
+                <input type="checkbox" checked={incomeKind === 'eventual'} onChange={() => setIncomeKind('eventual')} /> Receita eventual{' '}
+                <small>Recebimento único</small>
+              </label>
+            </div>
+          )}
+          <button className="primary-button" onClick={addSalary} disabled={!activeAccountId || isSaving}>
+            {isSaving ? 'Salvando...' : editingId ? 'Salvar alterações' : 'Salvar receita'}
           </button>
         </div>
       )}
@@ -183,30 +237,15 @@ export function ReceitasPage() {
                 </div>
                 <b>{formatCurrency(income.amount)}</b>
                 <span>{account?.institution ?? '—'}</span>
-                <button className="edit-button" onClick={() => startSalaryEdit(income.id, income.description, income.amount)} aria-label={`Editar ${income.description}`}>
-                  <Settings />
+                <button className="edit-button" onClick={() => startEdit(income.id, true)} aria-label={`Editar ${income.description}`}>
+                  <Pencil />
+                </button>
+                <button aria-label={`Excluir ${income.description}`} onClick={() => removeIncome(income.id, true)}>
+                  <Trash2 />
                 </button>
               </div>
             );
           })}
-          {editingId && (
-            <div className="inline-edit">
-              <div className="field">
-                <label>Nome da renda</label>
-                <input value={salaryName} onChange={(e) => setSalaryName(e.target.value)} />
-              </div>
-              <div className="field">
-                <label>Valor</label>
-                <CurrencyInput value={salaryValue} onChange={setSalaryValue} />
-              </div>
-              <button className="primary-button" onClick={saveSalaryEdit}>
-                Salvar edição
-              </button>
-              <button className="form-close" type="button" onClick={() => setEditingId(null)} aria-label="Cancelar edição">
-                <X />
-              </button>
-            </div>
-          )}
         </div>
       )}
 
@@ -269,6 +308,12 @@ export function ReceitasPage() {
               <span>{account?.institution ?? '—'}</span>
               <b>{formatCurrency(income.amount)}</b>
               <em>Programado</em>
+              <button className="edit-button" onClick={() => startEdit(income.id, true)} aria-label={`Editar ${income.description}`}>
+                <Pencil />
+              </button>
+              <button aria-label={`Excluir ${income.description}`} onClick={() => removeIncome(income.id, true)}>
+                <Trash2 />
+              </button>
             </div>
           );
         })}
@@ -286,6 +331,12 @@ export function ReceitasPage() {
               <span>{account?.institution ?? '—'}</span>
               <b>{formatCurrency(income.amount)}</b>
               <em>Recebido</em>
+              <button className="edit-button" onClick={() => startEdit(income.id, false)} aria-label={`Editar ${income.description}`}>
+                <Pencil />
+              </button>
+              <button aria-label={`Excluir ${income.description}`} onClick={() => removeIncome(income.id, false)}>
+                <Trash2 />
+              </button>
             </div>
           );
         })}
@@ -321,6 +372,12 @@ export function ReceitasPage() {
                 </div>
                 <b>+ {formatCurrency(income.amount)}</b>
                 <span>{account?.institution ?? '—'}</span>
+                <button className="edit-button" onClick={() => startEdit(income.id, false)} aria-label={`Editar ${income.description}`}>
+                  <Pencil />
+                </button>
+                <button aria-label={`Excluir ${income.description}`} onClick={() => removeIncome(income.id, false)}>
+                  <Trash2 />
+                </button>
               </div>
             );
           })}

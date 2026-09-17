@@ -1,10 +1,15 @@
 import { useState } from 'react';
-import { FileText, Trash2 } from 'lucide-react';
+import { FileText, Pencil, Trash2, X } from 'lucide-react';
 import { SectionPageTitle } from '@/components/dashboard/SectionPageTitle';
 import { CurrencyInput, parseCurrencyInput } from '@/components/CurrencyInput';
 import { useAccounts } from '@/hooks/useAccounts';
-import { useCreateTransaction, useDeleteTransaction, useTransactions } from '@/hooks/useTransactions';
-import { useCreateRecurringTransaction, useDeleteRecurringTransaction, useRecurringTransactions } from '@/hooks/useRecurringTransactions';
+import { useCreateTransaction, useDeleteTransaction, useTransactions, useUpdateTransaction } from '@/hooks/useTransactions';
+import {
+  useCreateRecurringTransaction,
+  useDeleteRecurringTransaction,
+  useRecurringTransactions,
+  useUpdateRecurringTransaction,
+} from '@/hooks/useRecurringTransactions';
 import { dayOfMonthFromISODate, formatDate, todayISODate } from '@/lib/datetime';
 
 type ExpenseKind = 'recorrente' | 'eventual';
@@ -23,10 +28,14 @@ export function DespesasPage() {
   const eventualExpenses = allExpenses.filter((expense) => !expense.recurring_transaction_id);
   const createRecurring = useCreateRecurringTransaction();
   const createTransaction = useCreateTransaction();
+  const updateRecurring = useUpdateRecurringTransaction();
+  const updateTransaction = useUpdateTransaction();
   const deleteRecurring = useDeleteRecurringTransaction();
   const deleteTransaction = useDeleteTransaction();
 
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingIsRecurring, setEditingIsRecurring] = useState(false);
   const [name, setName] = useState('');
   const [notes, setNotes] = useState('Boleto');
   const [value, setValue] = useState('');
@@ -36,13 +45,67 @@ export function DespesasPage() {
   const [expenseTab, setExpenseTab] = useState<ExpenseTab>('overview');
 
   const activeAccountId = accountId || accounts[0]?.id || '';
+  const isSaving = createRecurring.isPending || createTransaction.isPending || updateRecurring.isPending || updateTransaction.isPending;
+
+  function resetForm() {
+    setName('');
+    setValue('');
+    setDueDate('');
+    setAccountId('');
+    setExpenseKind('recorrente');
+    setEditingId(null);
+    setEditingIsRecurring(false);
+    setShowForm(false);
+  }
+
+  function toggleForm() {
+    if (showForm) resetForm();
+    else setShowForm(true);
+  }
+
+  function startEdit(itemId: string, isRecurring: boolean) {
+    if (isRecurring) {
+      const source = recurringExpenses.find((expense) => expense.id === itemId);
+      if (!source) return;
+      setName(source.description);
+      setValue(source.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+      setDueDate(source.start_date);
+      setAccountId(source.account_id);
+      setExpenseKind('recorrente');
+    } else {
+      const source = eventualExpenses.find((expense) => expense.id === itemId);
+      if (!source) return;
+      setName(source.description);
+      setValue(source.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+      setDueDate(source.date);
+      setAccountId(source.account_id);
+      setNotes(source.notes || 'Boleto');
+      setExpenseKind('eventual');
+    }
+    setEditingId(itemId);
+    setEditingIsRecurring(isRecurring);
+    setShowForm(true);
+  }
 
   async function addExpense() {
     if (!name.trim() || !value.trim() || !activeAccountId) return;
     const amount = parseCurrencyInput(value);
     const date = dueDate || todayISODate();
 
-    if (expenseKind === 'recorrente') {
+    if (editingId) {
+      if (editingIsRecurring) {
+        await updateRecurring.mutateAsync({
+          id: editingId,
+          account_id: activeAccountId,
+          description: name,
+          amount,
+          day_of_month: dayOfMonthFromISODate(date),
+          start_date: date,
+        });
+      } else {
+        await updateTransaction.mutateAsync({ id: editingId, account_id: activeAccountId, description: name, amount, date, notes });
+      }
+    } else if (expenseKind === 'recorrente') {
       await createRecurring.mutateAsync({
         account_id: activeAccountId,
         type: 'expense',
@@ -54,11 +117,7 @@ export function DespesasPage() {
     } else {
       await createTransaction.mutateAsync({ account_id: activeAccountId, type: 'expense', description: name, amount, date, notes });
     }
-    setName('');
-    setValue('');
-    setDueDate('');
-    setExpenseKind('recorrente');
-    setShowForm(false);
+    resetForm();
   }
 
   const items = [
@@ -93,25 +152,30 @@ export function DespesasPage() {
 
   return (
     <div className="page-view">
-      <SectionPageTitle title="Despesas" action="Cadastrar despesa" onAction={() => setShowForm(!showForm)} />
+      <SectionPageTitle title="Despesas" action="Cadastrar despesa" onAction={toggleForm} />
 
       {showForm && (
         <div className="form-card">
+          <button className="form-close" type="button" onClick={resetForm} aria-label="Fechar formulário">
+            <X />
+          </button>
           <div className="field">
             <label>Nome da despesa</label>
             <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex.: Internet residencial" />
           </div>
-          <div className="field">
-            <label>Tipo da despesa</label>
-            <select value={notes} onChange={(e) => setNotes(e.target.value)}>
-              <option>Boleto</option>
-              <option>Conta de consumo</option>
-              <option>Financiamento</option>
-              <option>Assinatura</option>
-              <option>Aluguel</option>
-              <option>Outra</option>
-            </select>
-          </div>
+          {(!editingId || !editingIsRecurring) && (
+            <div className="field">
+              <label>Tipo da despesa</label>
+              <select value={notes} onChange={(e) => setNotes(e.target.value)}>
+                <option>Boleto</option>
+                <option>Conta de consumo</option>
+                <option>Financiamento</option>
+                <option>Assinatura</option>
+                <option>Aluguel</option>
+                <option>Outra</option>
+              </select>
+            </div>
+          )}
           <div className="field">
             <label>Valor</label>
             <CurrencyInput value={value} onChange={setValue} />
@@ -131,18 +195,22 @@ export function DespesasPage() {
               ))}
             </select>
           </div>
-          <div className="expense-kind-options">
-            <label className={`check-field ${expenseKind === 'recorrente' ? 'selected' : ''}`}>
-              <input type="checkbox" checked={expenseKind === 'recorrente'} onChange={() => setExpenseKind('recorrente')} /> Despesa
-              recorrente <small>Renovação automática</small>
-            </label>
-            <label className={`check-field ${expenseKind === 'eventual' ? 'selected' : ''}`}>
-              <input type="checkbox" checked={expenseKind === 'eventual'} onChange={() => setExpenseKind('eventual')} /> Despesa
-              eventual <small>Lançamento único</small>
-            </label>
-          </div>
-          <button className="primary-button" onClick={addExpense} disabled={!activeAccountId || createRecurring.isPending || createTransaction.isPending}>
-            {createRecurring.isPending || createTransaction.isPending ? 'Salvando...' : 'Salvar despesa'}
+          {editingId ? (
+            <p className="edit-kind-label">Editando despesa {editingIsRecurring ? 'recorrente' : 'eventual'}</p>
+          ) : (
+            <div className="expense-kind-options">
+              <label className={`check-field ${expenseKind === 'recorrente' ? 'selected' : ''}`}>
+                <input type="checkbox" checked={expenseKind === 'recorrente'} onChange={() => setExpenseKind('recorrente')} /> Despesa
+                recorrente <small>Renovação automática</small>
+              </label>
+              <label className={`check-field ${expenseKind === 'eventual' ? 'selected' : ''}`}>
+                <input type="checkbox" checked={expenseKind === 'eventual'} onChange={() => setExpenseKind('eventual')} /> Despesa
+                eventual <small>Lançamento único</small>
+              </label>
+            </div>
+          )}
+          <button className="primary-button" onClick={addExpense} disabled={!activeAccountId || isSaving}>
+            {isSaving ? 'Salvando...' : editingId ? 'Salvar alterações' : 'Salvar despesa'}
           </button>
         </div>
       )}
@@ -181,6 +249,9 @@ export function DespesasPage() {
             </div>
             <b>{formatCurrency(item.value)}</b>
             <span className={`renewal ${item.automatic ? 'on' : ''}`}>{item.automatic ? 'Automática' : 'Manual'}</span>
+            <button className="edit-button" aria-label={`Editar ${item.name}`} onClick={() => startEdit(item.id, item.isRecurring)}>
+              <Pencil />
+            </button>
             <button aria-label={`Excluir ${item.name}`} onClick={() => removeItem(item.id, item.isRecurring)}>
               <Trash2 />
             </button>

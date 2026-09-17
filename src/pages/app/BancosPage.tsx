@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
-import { ChevronDown, CreditCard, Landmark, Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, CreditCard, Landmark, Pencil, Plus, Trash2 } from 'lucide-react';
 import { SectionPageTitle } from '@/components/dashboard/SectionPageTitle';
 import { CurrencyInput, parseCurrencyInput } from '@/components/CurrencyInput';
 import { CardPreview } from '@/components/CardPreview';
 import { Modal } from '@/components/Modal';
-import { useAccounts, useCreateAccount, useDeleteAccount } from '@/hooks/useAccounts';
+import { useAccounts, useCreateAccount, useDeleteAccount, useUpdateAccount } from '@/hooks/useAccounts';
 import { ACCOUNT_TYPE_OPTIONS, accountTypeLabel } from '@/lib/accountTypes';
 import type { Account, AccountType } from '@/types/database';
 
@@ -22,10 +22,13 @@ function StatusChip({ active }: { active: boolean }) {
 export function BancosPage() {
   const { data: accounts = [], isLoading } = useAccounts();
   const createAccount = useCreateAccount();
+  const updateAccount = useUpdateAccount();
   const deleteAccount = useDeleteAccount();
 
   const [bankModalOpen, setBankModalOpen] = useState(false);
+  const [editingBankId, setEditingBankId] = useState<string | null>(null);
   const [cardModalInstitution, setCardModalInstitution] = useState<string | null>(null);
+  const [editingCardId, setEditingCardId] = useState<string | null>(null);
   const [expandedBanks, setExpandedBanks] = useState<Set<string>>(new Set());
 
   // Formulário de conta bancária (não-cartão).
@@ -43,16 +46,28 @@ export function BancosPage() {
   const [cardClosingDay, setCardClosingDay] = useState('');
   const [cardDueDay, setCardDueDay] = useState('');
 
-  const cardModalOpen = cardModalInstitution !== null;
-  const cardInstitutionLocked = cardModalInstitution !== null && cardModalInstitution !== '';
+  const cardModalOpen = cardModalInstitution !== null || editingCardId !== null;
+  const cardInstitutionLocked = cardModalInstitution !== null && cardModalInstitution !== '' && editingCardId === null;
 
   function openCardModal(institution: string) {
     setCardInstitutionInput(institution);
     setCardModalInstitution(institution);
   }
 
+  function openCardEdit(card: Account) {
+    setCardInstitutionInput(card.institution ?? '');
+    setCardName(card.name);
+    setCardBrand(card.card_brand ?? CARD_BRAND_OPTIONS[0]);
+    setCardLimit(card.credit_limit ? card.credit_limit.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '');
+    setCardClosingDay(card.billing_closing_day ? String(card.billing_closing_day) : '');
+    setCardDueDay(card.billing_due_day ? String(card.billing_due_day) : '');
+    setEditingCardId(card.id);
+  }
+
   function closeCardModal() {
     setCardModalInstitution(null);
+    setEditingCardId(null);
+    setCardInstitutionInput('');
     setCardName('');
     setCardBrand(CARD_BRAND_OPTIONS[0]);
     setCardLimit('');
@@ -60,33 +75,53 @@ export function BancosPage() {
     setCardDueDay('');
   }
 
-  async function addBankAccount() {
-    if (!bankName.trim() || !bankInstitution.trim()) return;
-    await createAccount.mutateAsync({
-      name: bankName,
-      institution: bankInstitution,
-      type: bankType,
-      balance: parseCurrencyInput(bankBalance),
-    });
+  function openBankEdit(account: Account) {
+    setBankName(account.name);
+    setBankInstitution(account.institution ?? '');
+    setBankType(account.type);
+    setEditingBankId(account.id);
+    setBankModalOpen(true);
+  }
+
+  function closeBankModal() {
+    setBankModalOpen(false);
+    setEditingBankId(null);
     setBankName('');
     setBankInstitution('');
     setBankType('checking');
     setBankBalance('');
-    setBankModalOpen(false);
   }
 
-  async function addCard() {
+  async function saveBankAccount() {
+    if (!bankName.trim() || !bankInstitution.trim()) return;
+    if (editingBankId) {
+      await updateAccount.mutateAsync({ id: editingBankId, name: bankName, institution: bankInstitution, type: bankType });
+    } else {
+      await createAccount.mutateAsync({
+        name: bankName,
+        institution: bankInstitution,
+        type: bankType,
+        balance: parseCurrencyInput(bankBalance),
+      });
+    }
+    closeBankModal();
+  }
+
+  async function saveCard() {
     if (!cardName.trim() || !cardInstitutionInput.trim()) return;
-    await createAccount.mutateAsync({
+    const cardFields = {
       name: cardName,
       institution: cardInstitutionInput,
-      type: 'credit_card',
-      balance: 0,
       credit_limit: parseCurrencyInput(cardLimit),
       card_brand: cardBrand,
       billing_closing_day: cardClosingDay ? Number(cardClosingDay) : undefined,
       billing_due_day: cardDueDay ? Number(cardDueDay) : undefined,
-    });
+    };
+    if (editingCardId) {
+      await updateAccount.mutateAsync({ id: editingCardId, type: 'credit_card', ...cardFields });
+    } else {
+      await createAccount.mutateAsync({ type: 'credit_card', balance: 0, ...cardFields });
+    }
     closeCardModal();
   }
 
@@ -146,6 +181,16 @@ export function BancosPage() {
                 <b>{formatCurrency(account.balance)}</b>
               </div>
               <button
+                className="edit-button"
+                aria-label={`Editar ${account.institution}`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  openBankEdit(account);
+                }}
+              >
+                <Pencil />
+              </button>
+              <button
                 aria-label={`Excluir ${account.institution}`}
                 onClick={(event) => {
                   event.stopPropagation();
@@ -171,6 +216,9 @@ export function BancosPage() {
                       <small>{card.card_brand ?? 'Bandeira não informada'}</small>
                     </div>
                     <b>Limite {formatCurrency(card.credit_limit ?? 0)}</b>
+                    <button className="edit-button" aria-label={`Editar ${card.name}`} onClick={() => openCardEdit(card)}>
+                      <Pencil />
+                    </button>
                     <button aria-label={`Excluir ${card.name}`} onClick={() => deleteAccount.mutate(card.id)}>
                       <Trash2 />
                     </button>
@@ -208,6 +256,9 @@ export function BancosPage() {
                 <small>{card.institution || card.card_brand || 'Cartão avulso'}</small>
               </div>
               <b>Limite {formatCurrency(card.credit_limit ?? 0)}</b>
+              <button className="edit-button" aria-label={`Editar ${card.name}`} onClick={() => openCardEdit(card)}>
+                <Pencil />
+              </button>
               <button aria-label={`Excluir ${card.name}`} onClick={() => deleteAccount.mutate(card.id)}>
                 <Trash2 />
               </button>
@@ -219,7 +270,7 @@ export function BancosPage() {
         <Plus /> Adicionar cartão avulso
       </button>
 
-      <Modal open={bankModalOpen} onClose={() => setBankModalOpen(false)} title="Adicionar conta bancária">
+      <Modal open={bankModalOpen} onClose={closeBankModal} title={editingBankId ? 'Editar conta bancária' : 'Adicionar conta bancária'}>
         <div className="bank-account-form">
           <div className="field">
             <label>Instituição</label>
@@ -239,17 +290,19 @@ export function BancosPage() {
               ))}
             </select>
           </div>
-          <div className="field">
-            <label>Saldo inicial</label>
-            <CurrencyInput value={bankBalance} onChange={setBankBalance} />
-          </div>
-          <button className="primary-button" onClick={addBankAccount} disabled={createAccount.isPending}>
-            {createAccount.isPending ? 'Salvando...' : 'Salvar'}
+          {!editingBankId && (
+            <div className="field">
+              <label>Saldo inicial</label>
+              <CurrencyInput value={bankBalance} onChange={setBankBalance} />
+            </div>
+          )}
+          <button className="primary-button" onClick={saveBankAccount} disabled={createAccount.isPending || updateAccount.isPending}>
+            {createAccount.isPending || updateAccount.isPending ? 'Salvando...' : editingBankId ? 'Salvar alterações' : 'Salvar'}
           </button>
         </div>
       </Modal>
 
-      <Modal open={cardModalOpen} onClose={closeCardModal} title="Adicionar cartão">
+      <Modal open={cardModalOpen} onClose={closeCardModal} title={editingCardId ? 'Editar cartão' : 'Adicionar cartão'}>
         <div className="bank-account-form">
           <CardPreview
             holderName={cardName}
@@ -292,8 +345,8 @@ export function BancosPage() {
             <label>Dia de vencimento</label>
             <input inputMode="numeric" value={cardDueDay} onChange={(event) => setCardDueDay(event.target.value.replace(/\D/g, '').slice(0, 2))} placeholder="Ex.: 27" />
           </div>
-          <button className="primary-button" onClick={addCard} disabled={createAccount.isPending}>
-            {createAccount.isPending ? 'Salvando...' : 'Salvar'}
+          <button className="primary-button" onClick={saveCard} disabled={createAccount.isPending || updateAccount.isPending}>
+            {createAccount.isPending || updateAccount.isPending ? 'Salvando...' : editingCardId ? 'Salvar alterações' : 'Salvar'}
           </button>
         </div>
       </Modal>

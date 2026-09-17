@@ -59,20 +59,25 @@ export function useCreateRecurringTransaction() {
 
 interface UpdateRecurringTransactionInput {
   id: string;
+  account_id: string;
   description: string;
   amount: number;
+  day_of_month: number;
+  start_date: string;
 }
 
 export function useUpdateRecurringTransaction() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, description, amount }: UpdateRecurringTransactionInput) => {
-      const { error } = await supabase.from('recurring_transactions').update({ description, amount }).eq('id', id);
+    mutationFn: async ({ id, ...input }: UpdateRecurringTransactionInput) => {
+      const { error } = await supabase.from('recurring_transactions').update(input).eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['recurring_transactions', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['transactions', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['accounts', user?.id] });
     },
   });
 }

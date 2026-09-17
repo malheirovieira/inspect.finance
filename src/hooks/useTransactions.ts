@@ -55,6 +55,33 @@ export function useCreateTransaction() {
   });
 }
 
+interface UpdateTransactionInput {
+  id: string;
+  account_id: string;
+  description: string;
+  amount: number;
+  date: string;
+  notes?: string;
+}
+
+export function useUpdateTransaction() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...input }: UpdateTransactionInput) => {
+      const { error } = await supabase
+        .from('transactions')
+        .update({ ...input, amount_in_base_currency: input.amount })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['accounts', user?.id] });
+    },
+  });
+}
+
 export function useDeleteTransaction() {
   const { user } = useAuth();
   const queryClient = useQueryClient();

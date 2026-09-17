@@ -48,6 +48,27 @@ export function useCreateGoal() {
   });
 }
 
+interface UpdateGoalInput {
+  id: string;
+  name: string;
+  target_amount: number;
+  target_date?: string;
+}
+
+export function useUpdateGoal() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...input }: UpdateGoalInput) => {
+      const { error } = await supabase.from('goals').update(input).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['goals', user?.id] });
+    },
+  });
+}
+
 export function useGoalContributions(goalId: string | null) {
   return useQuery({
     queryKey: ['goal_contributions', goalId],

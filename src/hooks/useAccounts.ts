@@ -58,6 +58,34 @@ export function useCreateAccount() {
   });
 }
 
+interface UpdateAccountInput {
+  id: string;
+  name: string;
+  type: AccountType;
+  institution: string;
+  credit_limit?: number;
+  card_brand?: string;
+  billing_closing_day?: number;
+  billing_due_day?: number;
+}
+
+export function useUpdateAccount() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  return useMutation({
+    // Saldo não entra aqui de propósito: `balance` na tela vem da view calculada
+    // (accounts_with_balance) a partir de `initial_balance` + transações já pagas — editar
+    // `initial_balance` depois que a conta já tem lançamentos mudaria o histórico retroativamente.
+    mutationFn: async ({ id, ...input }: UpdateAccountInput) => {
+      const { error } = await supabase.from('accounts').update(input).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['accounts', user?.id] });
+    },
+  });
+}
+
 export function useDeleteAccount() {
   const { user } = useAuth();
   const queryClient = useQueryClient();

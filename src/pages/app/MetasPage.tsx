@@ -1,8 +1,8 @@
 import { useState, type CSSProperties } from 'react';
-import { Plus, X } from 'lucide-react';
+import { Pencil, Plus, X } from 'lucide-react';
 import { SectionPageTitle } from '@/components/dashboard/SectionPageTitle';
 import { CurrencyInput, parseCurrencyInput } from '@/components/CurrencyInput';
-import { useAddGoalContribution, useCreateGoal, useGoalContributions, useGoals } from '@/hooks/useGoals';
+import { useAddGoalContribution, useCreateGoal, useGoalContributions, useGoals, useUpdateGoal } from '@/hooks/useGoals';
 import { useRevealOnVisible } from '@/hooks/useRevealOnVisible';
 import { formatDateTime } from '@/lib/datetime';
 
@@ -34,22 +34,40 @@ function GoalHistory({ goalId }: { goalId: string }) {
 export function MetasPage() {
   const { data: goals = [], isLoading } = useGoals();
   const createGoal = useCreateGoal();
+  const updateGoal = useUpdateGoal();
   const addContribution = useAddGoalContribution();
   const [goalsGridRef, goalsGridVisible] = useRevealOnVisible<HTMLDivElement>();
 
   const [showForm, setShowForm] = useState(false);
+  const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [targetAmount, setTargetAmount] = useState('');
   const [depositGoal, setDepositGoal] = useState<string | null>(null);
   const [historyGoal, setHistoryGoal] = useState<string | null>(null);
   const [deposit, setDeposit] = useState('');
 
-  async function addGoal() {
-    if (!title.trim()) return;
-    await createGoal.mutateAsync({ name: title, target_amount: parseCurrencyInput(targetAmount) || 5000 });
+  function resetForm() {
     setTitle('');
     setTargetAmount('');
+    setEditingGoalId(null);
     setShowForm(false);
+  }
+
+  function startEdit(goalId: string, name: string, target: number) {
+    setTitle(name);
+    setTargetAmount(target.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+    setEditingGoalId(goalId);
+    setShowForm(true);
+  }
+
+  async function addGoal() {
+    if (!title.trim()) return;
+    if (editingGoalId) {
+      await updateGoal.mutateAsync({ id: editingGoalId, name: title, target_amount: parseCurrencyInput(targetAmount) || 5000 });
+    } else {
+      await createGoal.mutateAsync({ name: title, target_amount: parseCurrencyInput(targetAmount) || 5000 });
+    }
+    resetForm();
   }
 
   async function addDeposit(goalId: string, currentAmount: number, targetAmountValue: number) {
@@ -66,7 +84,7 @@ export function MetasPage() {
 
       {showForm && (
         <div className="form-card goal-form">
-          <button className="form-close" type="button" onClick={() => setShowForm(false)} aria-label="Cancelar criação da meta">
+          <button className="form-close" type="button" onClick={resetForm} aria-label={editingGoalId ? 'Cancelar edição da meta' : 'Cancelar criação da meta'}>
             <X />
           </button>
           <div className="field">
@@ -77,8 +95,8 @@ export function MetasPage() {
             <label>Valor desejado</label>
             <CurrencyInput value={targetAmount} onChange={setTargetAmount} />
           </div>
-          <button className="primary-button" onClick={addGoal} disabled={createGoal.isPending}>
-            {createGoal.isPending ? 'Criando...' : 'Criar meta'}
+          <button className="primary-button" onClick={addGoal} disabled={createGoal.isPending || updateGoal.isPending}>
+            {createGoal.isPending || updateGoal.isPending ? 'Salvando...' : editingGoalId ? 'Salvar alterações' : 'Criar meta'}
           </button>
         </div>
       )}
@@ -126,6 +144,9 @@ export function MetasPage() {
               <div className="goal-actions">
                 <button className="deposit-button" onClick={() => setDepositGoal(goal.id)}>
                   <Plus /> Alimentar meta
+                </button>
+                <button className="edit-button" aria-label={`Editar ${goal.name}`} onClick={() => startEdit(goal.id, goal.name, goal.target_amount)}>
+                  <Pencil />
                 </button>
                 <button className="history-button" onClick={() => setHistoryGoal(historyGoal === goal.id ? null : goal.id)}>
                   {historyGoal === goal.id ? (
